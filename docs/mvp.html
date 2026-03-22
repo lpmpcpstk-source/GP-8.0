@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MVP — Gerenciador de Pulso v8.0 | Stickfran Indústria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* =====================================================
+       DESIGN TOKENS — Fibonacci + Black/Red/White System
+       ===================================================== */
+    :root {
+      /* Paleta */
+      --color-base:        #080808;
+      --color-surface:     #111111;
+      --color-surface-2:   #161616;
+      --color-surface-3:   #1e1e1e;
+      --color-border:      #2a2a2a;
+      --color-red:         #E8192C;
+      --color-red-dim:     #9c1020;
+      --color-red-glow:    rgba(232, 25, 44, 0.18);
+      --color-white:       #F5F5F5;
+      --color-white-dim:   #a0a0a0;
+      --color-white-faint: #3a3a3a;
+
+      /* Tipografia */
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-ui:      'Barlow Condensed', sans-serif;
+      --font-body:    'Barlow', sans-serif;
+      --font-mono:    'Share Tech Mono', monospace;
+
+      /* Fibonacci spacing */
+      --fib1:  1px;
+      --fib2:  2px;
+      --fib3:  3px;
+      --fib5:  5px;
+      --fib8:  8px;
+      --fib13: 13px;
+      --fib21: 21px;
+      --fib34: 34px;
+      --fib55: 55px;
+      --fib89: 89px;
+
+      /* Layout */
+      --sidebar-width:  240px;
+      --header-height:  56px;
+      --content-max:    860px;
+
+      /* Glassmorphism */
+      --glass-bg:     rgba(14, 14, 14, 0.82);
+      --glass-border: rgba(232, 25, 44, 0.22);
+      --glass-blur:   blur(18px);
+    }
+
+    /* =====================================================
+       RESET & BASE
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + var(--fib21)); }
+
+    body {
+      background: var(--color-base);
+      color: var(--color-white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    ::selection { background: var(--color-red); color: var(--color-white); }
+
+    /* =====================================================
+       HEADER FIXO
+       ===================================================== */
+    .site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: 2px solid var(--color-red);
+      display: flex;
+      align-items: center;
+      gap: var(--fib21);
+      padding: 0 var(--fib34);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--fib8);
+    }
+
+    .header-logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--color-red);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--color-white);
+      letter-spacing: 0;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--color-white);
+      line-height: 1;
+    }
+
+    .header-subtitle {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      color: var(--color-red);
+      text-transform: uppercase;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--color-border);
+      margin: 0 var(--fib8);
+    }
+
+    .header-meta {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--color-white-dim);
+      letter-spacing: 1px;
+    }
+
+    .header-badges {
+      margin-left: auto;
+      display: flex;
+      gap: var(--fib8);
+    }
+
+    .badge {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+
+    .badge-frontend { border-color: #3b82f6; color: #3b82f6; }
+    .badge-backend  { border-color: #10b981; color: #10b981; }
+    .badge-pwa      { border-color: #8b5cf6; color: #8b5cf6; }
+    .badge-security { border-color: var(--color-red); color: var(--color-red); }
+
+    /* =====================================================
+       LAYOUT PRINCIPAL
+       ===================================================== */
+    .layout {
+      display: flex;
+      padding-top: var(--header-height);
+      min-height: 100vh;
+    }
+
+    /* =====================================================
+       SIDEBAR
+       ===================================================== */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      overflow-y: auto;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-right: 1px solid var(--glass-border);
+      padding: var(--fib21) 0 var(--fib55) 0;
+      z-index: 50;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-red-dim) transparent;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--color-red-dim); border-radius: 2px; }
+
+    .toc-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-red);
+      padding: 0 var(--fib21) var(--fib13) var(--fib21);
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: var(--fib13);
+    }
+
+    .toc-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .toc-item a {
+      display: flex;
+      align-items: center;
+      gap: var(--fib8);
+      padding: var(--fib5) var(--fib21);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--color-white-dim);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+    }
+
+    .toc-item a:hover {
+      color: var(--color-white);
+      border-left-color: var(--color-border);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .toc-item a.active {
+      color: var(--color-red);
+      border-left-color: var(--color-red);
+      background: var(--color-red-glow);
+    }
+
+    .toc-num {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-red-dim);
+      min-width: 18px;
+      flex-shrink: 0;
+    }
+
+    /* =====================================================
+       CONTEUDO PRINCIPAL
+       ===================================================== */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: var(--fib55) var(--fib55) var(--fib89) var(--fib55);
+    }
+
+    .doc-body {
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+
+    /* =====================================================
+       SECOES
+       ===================================================== */
+    .doc-section {
+      margin-bottom: var(--fib89);
+      scroll-margin-top: calc(var(--header-height) + var(--fib21));
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--fib13);
+      margin-bottom: var(--fib34);
+      padding-bottom: var(--fib13);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-red);
+      line-height: 1;
+      padding-bottom: 2px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 36px;
+      letter-spacing: 3px;
+      color: var(--color-white);
+      line-height: 1;
+    }
+
+    h3 {
+      font-family: var(--font-ui);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin: var(--fib34) 0 var(--fib13) 0;
+    }
+
+    h4 {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-red);
+      margin: var(--fib21) 0 var(--fib8) 0;
+    }
+
+    p {
+      color: var(--color-white-dim);
+      margin-bottom: var(--fib13);
+    }
+
+    p strong {
+      color: var(--color-white);
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--color-red);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    ul, ol {
+      padding-left: var(--fib21);
+      color: var(--color-white-dim);
+      margin-bottom: var(--fib13);
+    }
+
+    li {
+      margin-bottom: var(--fib5);
+    }
+
+    li strong {
+      color: var(--color-white);
+    }
+
+    /* =====================================================
+       CODE BLOCKS
+       ===================================================== */
+    pre {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: var(--fib21);
+      overflow-x: auto;
+      margin: var(--fib21) 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #c9d1d9;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-border) transparent;
+    }
+
+    pre .kw  { color: #ff7b72; }
+    pre .fn  { color: #d2a8ff; }
+    pre .str { color: #a5d6ff; }
+    pre .num { color: #79c0ff; }
+    pre .cmt { color: #8b949e; font-style: italic; }
+    pre .var { color: #ffa657; }
+    pre .op  { color: #ff7b72; }
+    pre .type{ color: #79c0ff; }
+    pre .sql-kw  { color: var(--color-red); font-weight: bold; }
+    pre .sql-type{ color: #79c0ff; }
+    pre .sql-cmt { color: #8b949e; font-style: italic; }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: var(--color-red);
+    }
+
+    /* =====================================================
+       DIAGRAMA ASCII
+       ===================================================== */
+    .diagram-block {
+      background: var(--color-surface);
+      border: 1px solid var(--color-red-dim);
+      border-radius: 8px;
+      padding: var(--fib34);
+      margin: var(--fib21) 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .diagram-block::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-red), transparent);
+    }
+
+    .diagram-label {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-red);
+      margin-bottom: var(--fib13);
+    }
+
+    .diagram-block pre {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-size: 12px;
+      color: #c9d1d9;
+    }
+
+    /* =====================================================
+       FORMULAS MATEMATICAS
+       ===================================================== */
+    .formula-block {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-red);
+      border-radius: 6px;
+      padding: var(--fib21) var(--fib34);
+      margin: var(--fib21) 0;
+    }
+
+    .formula {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      color: var(--color-red);
+      display: block;
+      margin-bottom: var(--fib8);
+      letter-spacing: 1px;
+    }
+
+    .formula-desc {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-white-dim);
+      margin: 0;
+    }
+
+    .formula-var {
+      display: flex;
+      gap: var(--fib34);
+      flex-wrap: wrap;
+      margin-top: var(--fib13);
+    }
+
+    .formula-var-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--fib8);
+    }
+
+    .formula-var-item .sym {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-red);
+      min-width: 20px;
+    }
+
+    .formula-var-item .def {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--color-white-dim);
+    }
+
+    /* =====================================================
+       TABELAS
+       ===================================================== */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: var(--fib21) 0;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-ui);
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: var(--color-red);
+    }
+
+    thead th {
+      padding: var(--fib8) var(--fib13);
+      text-align: left;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: var(--color-white);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody td {
+      padding: var(--fib8) var(--fib13);
+      color: var(--color-white-dim);
+      vertical-align: top;
+    }
+
+    tbody td:first-child {
+      color: var(--color-white);
+      font-weight: 600;
+    }
+
+    tbody td code {
+      font-size: 11.5px;
+    }
+
+    /* =====================================================
+       CALLOUTS
+       ===================================================== */
+    .callout {
+      border-radius: 6px;
+      padding: var(--fib13) var(--fib21);
+      margin: var(--fib21) 0;
+      border-left: 3px solid;
+      display: flex;
+      gap: var(--fib13);
+    }
+
+    .callout-icon {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding-top: 2px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .callout-body {
+      font-size: 13.5px;
+      color: var(--color-white-dim);
+      line-height: 1.6;
+    }
+
+    .callout-body p { margin: 0; }
+
+    .callout-note {
+      background: rgba(59, 130, 246, 0.08);
+      border-color: #3b82f6;
+    }
+    .callout-note .callout-icon { color: #3b82f6; }
+
+    .callout-warning {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: #f59e0b;
+    }
+    .callout-warning .callout-icon { color: #f59e0b; }
+
+    .callout-todo {
+      background: rgba(139, 92, 246, 0.08);
+      border-color: #8b5cf6;
+    }
+    .callout-todo .callout-icon { color: #8b5cf6; }
+
+    .callout-danger {
+      background: var(--color-red-glow);
+      border-color: var(--color-red);
+    }
+    .callout-danger .callout-icon { color: var(--color-red); }
+
+    /* =====================================================
+       GRID DE CARDS
+       ===================================================== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--fib13);
+      margin: var(--fib21) 0;
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: var(--fib21);
+      transition: border-color 0.15s;
+    }
+
+    .card:hover {
+      border-color: var(--color-red-dim);
+    }
+
+    .card-title {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--color-red);
+      margin-bottom: var(--fib8);
+    }
+
+    .card-body {
+      font-size: 13px;
+      color: var(--color-white-dim);
+      line-height: 1.5;
+    }
+
+    /* =====================================================
+       PERFIS DE ACESSO
+       ===================================================== */
+    .access-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--fib13);
+      margin: var(--fib21) 0;
+    }
+
+    .access-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .access-card-header {
+      padding: var(--fib13) var(--fib21);
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 2px;
+    }
+
+    .access-card-header.admin    { background: var(--color-red); color: var(--color-white); }
+    .access-card-header.pcp      { background: #1a2a4a; color: #79c0ff; border-bottom: 2px solid #3b82f6; }
+    .access-card-header.operador { background: #1a2a1a; color: #6ee7b7; border-bottom: 2px solid #10b981; }
+
+    .access-card-body {
+      padding: var(--fib13) var(--fib21);
+    }
+
+    .access-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .access-list li {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      padding: var(--fib5) 0;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      gap: var(--fib8);
+      align-items: center;
+      color: var(--color-white-dim);
+    }
+
+    .access-list li:last-child { border-bottom: none; }
+
+    .perm-allow { color: #10b981; font-size: 11px; }
+    .perm-deny  { color: var(--color-red); font-size: 11px; }
+    .perm-read  { color: #f59e0b; font-size: 11px; }
+
+    /* =====================================================
+       ROADMAP
+       ===================================================== */
+    .roadmap-item {
+      display: flex;
+      gap: var(--fib21);
+      margin-bottom: var(--fib21);
+      align-items: flex-start;
+    }
+
+    .roadmap-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .roadmap-dot.planned  { background: #8b5cf6; box-shadow: 0 0 8px rgba(139,92,246,0.5); }
+    .roadmap-dot.research { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+    .roadmap-dot.stretch  { background: var(--color-red); box-shadow: 0 0 8px var(--color-red-glow); }
+
+    .roadmap-content {
+      flex: 1;
+    }
+
+    .roadmap-title {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--color-white);
+      margin-bottom: var(--fib3);
+    }
+
+    .roadmap-desc {
+      font-size: 13px;
+      color: var(--color-white-dim);
+      margin: 0;
+    }
+
+    .roadmap-tag {
+      font-family: var(--font-ui);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: var(--fib8);
+    }
+
+    .tag-planned  { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+    .tag-research { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .tag-stretch  { background: var(--color-red-glow); color: var(--color-red); }
+
+    /* =====================================================
+       DESIGN TOKENS DISPLAY
+       ===================================================== */
+    .tokens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--fib8);
+      margin: var(--fib21) 0;
+    }
+
+    .token-swatch {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .token-color {
+      height: 36px;
+    }
+
+    .token-info {
+      padding: var(--fib8);
+    }
+
+    .token-name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-white-dim);
+      margin-bottom: 2px;
+    }
+
+    .token-value {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-white);
+    }
+
+    /* =====================================================
+       SPACING VIS
+       ===================================================== */
+    .spacing-vis {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--fib8);
+      margin: var(--fib21) 0;
+      padding: var(--fib21);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sp-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--fib5);
+    }
+
+    .sp-bar {
+      background: var(--color-red);
+      width: 16px;
+      border-radius: 2px 2px 0 0;
+      opacity: 0.7;
+    }
+
+    .sp-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--color-white-dim);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+    }
+
+    /* =====================================================
+       FOOTER
+       ===================================================== */
+    .doc-footer {
+      margin-top: var(--fib89);
+      padding-top: var(--fib34);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--fib13);
+    }
+
+    .doc-footer-brand {
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: var(--color-white-dim);
+    }
+
+    .doc-footer-brand span {
+      color: var(--color-red);
+    }
+
+    .doc-footer-meta {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--color-white-faint);
+    }
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: var(--fib34) var(--fib21) var(--fib89); }
+      .access-grid { grid-template-columns: 1fr; }
+      .header-badges { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .header-title { font-size: 16px; }
+      .section-title { font-size: 26px; }
+      .formula-var { flex-direction: column; gap: var(--fib8); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+  <header class="site-header">
+    <div class="header-logo">
+      <div class="header-logo-mark">GP</div>
+      <div>
+        <div class="header-title">GERENCIADOR DE PULSO</div>
+        <div class="header-subtitle">Stickfran Industria &middot; MVP v8.0</div>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-meta">Documento Tecnico &nbsp;&middot;&nbsp; 2026</div>
+    <div class="header-badges">
+      <span class="badge badge-frontend">Frontend</span>
+      <span class="badge badge-backend">Backend</span>
+      <span class="badge badge-pwa">PWA</span>
+      <span class="badge badge-security">Security</span>
+    </div>
+  </header>
+
+  <!-- =====================================================
+       LAYOUT
+       ===================================================== -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" aria-label="Indice do documento">
+      <div class="toc-label">Indice</div>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#s01" data-section="s01"><span class="toc-num">01</span>Visao Geral do MVP</a></li>
+        <li class="toc-item"><a href="#s02" data-section="s02"><span class="toc-num">02</span>Arquitetura do Sistema</a></li>
+        <li class="toc-item"><a href="#s03" data-section="s03"><span class="toc-num">03</span>Stack Tecnologica</a></li>
+        <li class="toc-item"><a href="#s04" data-section="s04"><span class="toc-num">04</span>Mapa de Modulos JS</a></li>
+        <li class="toc-item"><a href="#s05" data-section="s05"><span class="toc-num">05</span>O Algoritmo Central</a></li>
+        <li class="toc-item"><a href="#s06" data-section="s06"><span class="toc-num">06</span>Design System v8.0</a></li>
+        <li class="toc-item"><a href="#s07" data-section="s07"><span class="toc-num">07</span>Banco de Dados</a></li>
+        <li class="toc-item"><a href="#s08" data-section="s08"><span class="toc-num">08</span>Controle de Acesso</a></li>
+        <li class="toc-item"><a href="#s09" data-section="s09"><span class="toc-num">09</span>PWA e Offline</a></li>
+        <li class="toc-item"><a href="#s10" data-section="s10"><span class="toc-num">10</span>Roadmap v9.0+</a></li>
+        <li class="toc-item"><a href="#s11" data-section="s11"><span class="toc-num">11</span>Limitacoes e Decisoes</a></li>
+      </ul>
+    </nav>
+
+    <!-- CONTEUDO PRINCIPAL -->
+    <main class="main-content">
+      <div class="doc-body">
+
+        <!-- =====================================================
+             SECAO 01 — VISAO GERAL
+             ===================================================== -->
+        <section class="doc-section" id="s01">
+          <div class="section-header">
+            <span class="section-num">01 /</span>
+            <h2 class="section-title">VISAO GERAL DO MVP</h2>
+          </div>
+
+          <h3>Objetivo</h3>
+          <p>O <strong>Gerenciador de Pulso v8.0</strong> e um sistema web progressivo desenvolvido para a <strong>Stickfran Industria</strong> com o proposito de digitalizar e automatizar o calculo de pulsos de espulas utilizadas em teares e maquinas de bordar. O sistema elimina planilhas manuais, reduz erros de contagem e fornece rastreabilidade completa das fichas tecnicas de producao.</p>
+
+          <h3>Escopo do MVP</h3>
+          <p>O MVP entrega as seguintes capacidades funcionais essenciais:</p>
+          <ul>
+            <li><strong>Calculo de pulsos</strong> &mdash; aplicacao do algoritmo Arquimedes + Bhaskara para determinar o numero preciso de pulsos a partir dos parametros geometricos da espula</li>
+            <li><strong>Gestao de fichas tecnicas</strong> &mdash; criacao, edicao, versionamento e exportacao de fichas por tipo de fio e espula</li>
+            <li><strong>Autenticacao multiusuario</strong> &mdash; tres perfis com permissoes granulares (admin, pcp, operador)</li>
+            <li><strong>Funcionamento offline</strong> &mdash; operacao continua mesmo sem conexao via Service Worker e cache estrategico</li>
+            <li><strong>Sincronizacao em nuvem</strong> &mdash; persistencia remota via Supabase com Row Level Security</li>
+            <li><strong>Exportacao de relatorios</strong> &mdash; PDF e impressao direta para uso no chao de fabrica</li>
+          </ul>
+
+          <h3>Publico-Alvo</h3>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-title">Operadores de Maquina</div>
+              <div class="card-body">Consultam fichas tecnicas e o contador de pulsos atual. Interface simplificada com poucos toques.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">PCP &mdash; Planejamento</div>
+              <div class="card-body">Criam e gerenciam fichas tecnicas, definem parametros de fio e espula, acompanham o historico de calculos.</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Administracao</div>
+              <div class="card-body">Gerenciam usuarios, realizam backups, configuram parametros globais do sistema e visualizam logs de auditoria.</div>
+            </div>
+          </div>
+
+          <h3>Contexto Textil</h3>
+          <p>Na industria textil, a <strong>espula</strong> e o carretel onde o fio e enrolado em espiral antes de ser consumido pelo tear. O <strong>pulso</strong> e a unidade de contagem eletrica do sensor acoplado ao eixo do tear &mdash; cada pulso corresponde a um comprimento fixo de fio consumido. O calculo impreciso do numero de pulsos por espula resulta em <strong>paradas inesperadas de maquina</strong>, perda de fio e retrabalho. O sistema resolve esse problema aplicando geometria analitica diretamente sobre os parametros dimensionais de cada bobina.</p>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">NOTE</span>
+            <div class="callout-body"><p>Cada tipo de fio e modelo de espula possui parametros geometricos unicos (diametro interno, diametro externo, espessura do fio). O sistema armazena esses parametros como cadastros reutilizaveis, evitando recalculo manual a cada troca de bobina.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 02 — ARQUITETURA
+             ===================================================== -->
+        <section class="doc-section" id="s02">
+          <div class="section-header">
+            <span class="section-num">02 /</span>
+            <h2 class="section-title">ARQUITETURA DO SISTEMA</h2>
+          </div>
+
+          <p>O sistema segue uma arquitetura <strong>client-heavy</strong>: toda a logica de negocio &mdash; incluindo o algoritmo de calculo &mdash; reside no frontend. O backend (Supabase) atua exclusivamente como camada de persistencia e autenticacao, sem logica de aplicacao no servidor.</p>
+
+          <div class="diagram-block">
+            <div class="diagram-label">Diagrama de Arquitetura &mdash; Gerenciador de Pulso v8.0</div>
+<pre>
++---------------------------------------------------------------------+
+|                        CLIENTE (Browser / PWA)                      |
+|                                                                     |
+|  +----------------------------------------------------------------+ |
+|  |                   app.js  (Orchestrator)                        | |
+|  |                                                                 | |
+|  |   +----------+  +----------+  +----------+  +------------+    | |
+|  |   |  auth.js |  |  calc.js |  | fichas.js|  |   ui.js    |    | |
+|  |   |  (JWT)   |  |(Arquimed)|  | (CRUD)   |  | (Renderer) |    | |
+|  |   +----+-----+  +----+-----+  +----+-----+  +-----+------+    | |
+|  |        |              |              |               |           | |
+|  |   +----v--------------v--------------v---------------v--------+ | |
+|  |   |           db.js / db-state.js / db-base.js                | | |
+|  |   |           Storage Layer + Offline Queue                    | | |
+|  |   +-----------------------------+------------------------------+ | |
+|  +----------------------------------|--------------------------------+ |
+|                                     | fetch() / REST                  |
+|  +----------------------------------|----------------------------+     |
+|  |   Service Worker (sw.js)         |                            |     |
+|  |   CacheFirst [static]            |  NetworkFirst [API, 6s TO] |     |
+|  |   Cache v8.0.0                   |  Background Sync Queue     |     |
+|  +----------------------------------|----------------------------+     |
++-------------------------------------|------------------------------------+
+                                      | HTTPS
++-------------------------------------v----------------------------------+
+|                         SUPABASE CLOUD                                 |
+|                                                                        |
+|  +-----------------+   +------------------+   +-------------------+   |
+|  |  Auth (GoTrue)  |   |   REST API       |   |  Realtime WS      |   |
+|  |  JWT  RLS       |   |  PostgREST       |   |  (reservado v9)   |   |
+|  +--------+--------+   +--------+---------+   +-------------------+   |
+|           |                     |                                      |
+|  +--------v---------------------v-------------------------------------+|
+|  |               PostgreSQL 15 (managed)                              ||
+|  |                                                                    ||
+|  |  fichas_tecnicas | usuarios | tipos_fio | espulas                  ||
+|  |  [RLS habilitado em todas as tabelas]                              ||
+|  +--------------------------------------------------------------------+|
++------------------------------------------------------------------------+
+</pre>
+          </div>
+
+          <h3>Fluxo de Dados Principal</h3>
+          <ol>
+            <li>O usuario autentica via <code>auth.js</code> &mdash; Supabase GoTrue retorna JWT armazenado em <code>localStorage</code></li>
+            <li>Requisicoes REST incluem o JWT no header <code>Authorization: Bearer ...</code></li>
+            <li>PostgREST avalia as politicas RLS antes de retornar qualquer dado</li>
+            <li>O modulo <code>db-state.js</code> mantem o estado da sessao e detecta mudancas de conectividade</li>
+            <li>Operacoes offline sao enfileiradas no <code>storage.js</code> e sincronizadas via Background Sync quando a conexao e restaurada</li>
+          </ol>
+
+          <div class="callout callout-warning">
+            <span class="callout-icon">WARNING</span>
+            <div class="callout-body"><p>O sistema nao utiliza Supabase Realtime nesta versao. Atualizacoes concorrentes de fichas por usuarios distintos podem gerar conflitos &mdash; a ultima gravacao vence (<em>last-write-wins</em>). A resolucao de conflitos esta no roadmap v9.0.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 03 — STACK TECNOLOGICA
+             ===================================================== -->
+        <section class="doc-section" id="s03">
+          <div class="section-header">
+            <span class="section-num">03 /</span>
+            <h2 class="section-title">STACK TECNOLOGICA</h2>
+          </div>
+
+          <p>A decisao de usar <strong>Vanilla JS</strong> sem frameworks foi deliberada. O ambiente de producao da Stickfran opera em tablets Android de baixa especificacao com conexao instavel. Eliminar o overhead de runtime de frameworks como React ou Vue reduz o Time-To-Interactive em aproximadamente 60% nos dispositivos-alvo.</p>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Camada</th>
+                  <th>Tecnologia</th>
+                  <th>Versao / Spec</th>
+                  <th>Justificativa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frontend &mdash; Logica</td>
+                  <td>Vanilla JavaScript</td>
+                  <td>ES2022 (modules)</td>
+                  <td>Zero overhead de runtime; bundle minimo</td>
+                </tr>
+                <tr>
+                  <td>Frontend &mdash; Estilo</td>
+                  <td>CSS Custom Properties</td>
+                  <td>CSS3 / Level 4</td>
+                  <td>Theming nativo sem pre-processador; suporte a PWA</td>
+                </tr>
+                <tr>
+                  <td>Frontend &mdash; Markup</td>
+                  <td>HTML5 Semantico</td>
+                  <td>HTML5 / ARIA 1.2</td>
+                  <td>Acessibilidade e SEO para intranets corporativas</td>
+                </tr>
+                <tr>
+                  <td>Offline / Cache</td>
+                  <td>Service Worker API</td>
+                  <td>Workbox patterns (manual)</td>
+                  <td>CacheFirst estatico + NetworkFirst API com fallback</td>
+                </tr>
+                <tr>
+                  <td>Persistencia local</td>
+                  <td>localStorage / IndexedDB</td>
+                  <td>Web Storage API</td>
+                  <td>Fila offline e cache de fichas recentes</td>
+                </tr>
+                <tr>
+                  <td>Backend / Auth</td>
+                  <td>Supabase</td>
+                  <td>v2.x (self-hostable)</td>
+                  <td>PostgreSQL + REST + Auth sem backend proprio</td>
+                </tr>
+                <tr>
+                  <td>Banco de Dados</td>
+                  <td>PostgreSQL</td>
+                  <td>v15 (via Supabase)</td>
+                  <td>ACID, RLS nativo, funcoes PL/pgSQL</td>
+                </tr>
+                <tr>
+                  <td>Tipografia</td>
+                  <td>Google Fonts</td>
+                  <td>Bebas Neue + Barlow</td>
+                  <td>Identidade visual industrial; cache offline via SW</td>
+                </tr>
+                <tr>
+                  <td>Exportacao</td>
+                  <td>window.print() / CSS @media print</td>
+                  <td>CSS Print API</td>
+                  <td>Sem dependencia de libs PDF externas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Decisoes de Bundling</h3>
+          <p>O projeto <strong>nao utiliza bundler</strong> (Webpack, Vite, Rollup). Os modulos JS sao servidos diretamente via <code>type="module"</code> com HTTP/2 multiplexing. Isso simplifica o deploy (apenas upload estatico) e elimina etapas de build do pipeline. Em producao, os arquivos sao servidos por um CDN ou bucket S3/R2 com cache agressivo.</p>
+
+          <pre><code class="language-html"><span class="cmt">&lt;!-- Carregamento dos modulos -- index.html --&gt;</span>
+&lt;<span class="kw">script</span> <span class="var">type</span>=<span class="str">"module"</span> <span class="var">src</span>=<span class="str">"./js/app.js"</span>&gt;&lt;/<span class="kw">script</span>&gt;
+&lt;<span class="kw">link</span> <span class="var">rel</span>=<span class="str">"manifest"</span> <span class="var">href</span>=<span class="str">"./manifest.json"</span>&gt;
+&lt;<span class="kw">meta</span> <span class="var">name</span>=<span class="str">"theme-color"</span> <span class="var">content</span>=<span class="str">"#080808"</span>&gt;</code></pre>
+        </section>
+
+        <!-- =====================================================
+             SECAO 04 — MAPA DE MODULOS JS
+             ===================================================== -->
+        <section class="doc-section" id="s04">
+          <div class="section-header">
+            <span class="section-num">04 /</span>
+            <h2 class="section-title">MAPA DE MODULOS JS</h2>
+          </div>
+
+          <p>A aplicacao e composta por <strong>19 modulos JavaScript</strong> com responsabilidades bem delimitadas. Todos os modulos usam <code>export</code> ES nativo e sao carregados via <code>import</code> pelo orquestrador <code>app.js</code>. Nao ha estado global compartilhado fora dos modulos <code>db-state.js</code> e <code>config.js</code>.</p>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Modulo</th>
+                  <th>Responsabilidade Principal</th>
+                  <th>Dependencias</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>01</td>
+                  <td><code>app.js</code></td>
+                  <td>Orquestrador central. Inicializa todos os modulos, registra o Service Worker, gerencia rotas de SPA e eventos globais.</td>
+                  <td>Todos os modulos</td>
+                </tr>
+                <tr>
+                  <td>02</td>
+                  <td><code>auth.js</code></td>
+                  <td>Login/logout via Supabase Auth. Gerencia JWT, refresh token, sessao persistente e redirecionamentos de acesso.</td>
+                  <td><code>db.js</code>, <code>ui.js</code></td>
+                </tr>
+                <tr>
+                  <td>03</td>
+                  <td><code>backup.js</code></td>
+                  <td>Exporta e importa snapshots JSON do banco de dados local. Permite restauracao emergencial sem acesso ao Supabase.</td>
+                  <td><code>db.js</code>, <code>storage.js</code></td>
+                </tr>
+                <tr>
+                  <td>04</td>
+                  <td><code>cadastros.js</code></td>
+                  <td>CRUD de tipos de fio e modelos de espulas. Formularios com validacao inline e feedback visual imediato.</td>
+                  <td><code>db.js</code>, <code>ui.js</code>, <code>ux.js</code></td>
+                </tr>
+                <tr>
+                  <td>05</td>
+                  <td><code>calc.js</code></td>
+                  <td>Nucleo matematico. Implementa o algoritmo Arquimedes para comprimento de espiral e Bhaskara para numero de pulsos. Sem efeitos colaterais &mdash; funcao pura.</td>
+                  <td>Nenhuma</td>
+                </tr>
+                <tr>
+                  <td>06</td>
+                  <td><code>config.js</code></td>
+                  <td>Constantes globais imutaveis: URL do Supabase, chave publica anon, versao do cache SW, timeouts de API.</td>
+                  <td>Nenhuma</td>
+                </tr>
+                <tr>
+                  <td>07</td>
+                  <td><code>db-base.js</code></td>
+                  <td>Camada de abstracao HTTP sobre a API REST do Supabase. Implementa <code>select</code>, <code>insert</code>, <code>update</code>, <code>delete</code> com tratamento de erros centralizado.</td>
+                  <td><code>config.js</code>, <code>auth.js</code></td>
+                </tr>
+                <tr>
+                  <td>08</td>
+                  <td><code>db-state.js</code></td>
+                  <td>Gerencia estado reativo da conexao (online/offline), detecta perda de rede via <code>navigator.onLine</code> + polling e notifica os modulos subscritos.</td>
+                  <td><code>config.js</code></td>
+                </tr>
+                <tr>
+                  <td>09</td>
+                  <td><code>db.js</code></td>
+                  <td>Fachada de alto nivel sobre <code>db-base.js</code>. Expoe metodos semanticos (<code>getFichas()</code>, <code>saveFicha()</code>) e decide entre gravacao remota ou local conforme conectividade.</td>
+                  <td><code>db-base.js</code>, <code>db-state.js</code>, <code>storage.js</code></td>
+                </tr>
+                <tr>
+                  <td>10</td>
+                  <td><code>export.js</code></td>
+                  <td>Renderiza fichas para impressao e gera PDFs via <code>window.print()</code> com folha de estilo dedicada. Tambem exporta listas em CSV.</td>
+                  <td><code>fichas.js</code>, <code>ui.js</code></td>
+                </tr>
+                <tr>
+                  <td>11</td>
+                  <td><code>ficha-select.js</code></td>
+                  <td>Componente de selecao de fichas com busca, filtros por tipo de fio e ordenacao. Usado como widget reutilizavel em multiplas views.</td>
+                  <td><code>db.js</code>, <code>ui.js</code></td>
+                </tr>
+                <tr>
+                  <td>12</td>
+                  <td><code>fichas.js</code></td>
+                  <td>CRUD completo de fichas tecnicas. Integra o modulo <code>calc.js</code> para recalcular pulsos sempre que parametros geometricos mudam.</td>
+                  <td><code>calc.js</code>, <code>db.js</code>, <code>ui.js</code>, <code>history.js</code></td>
+                </tr>
+                <tr>
+                  <td>13</td>
+                  <td><code>history.js</code></td>
+                  <td>Registra e exibe o log de alteracoes de cada ficha tecnica. Mantem as ultimas 50 versoes por ficha com diff resumido.</td>
+                  <td><code>db.js</code>, <code>ui.js</code></td>
+                </tr>
+                <tr>
+                  <td>14</td>
+                  <td><code>report.js</code></td>
+                  <td>Gera relatorios consolidados por periodo, tipo de fio ou maquina. Renderiza tabelas e graficos simples via Canvas API.</td>
+                  <td><code>db.js</code>, <code>ui.js</code>, <code>export.js</code></td>
+                </tr>
+                <tr>
+                  <td>15</td>
+                  <td><code>storage.js</code></td>
+                  <td>Abstracao sobre <code>localStorage</code> e <code>IndexedDB</code>. Gerencia a fila de operacoes offline, cache de fichas recentes e preferencias do usuario.</td>
+                  <td>Nenhuma</td>
+                </tr>
+                <tr>
+                  <td>16</td>
+                  <td><code>theme.js</code></td>
+                  <td>Aplica e persiste o tema visual (dark padrao). Injeta variaveis CSS no <code>:root</code> dinamicamente. Reservado para futuros temas white-label.</td>
+                  <td><code>storage.js</code></td>
+                </tr>
+                <tr>
+                  <td>17</td>
+                  <td><code>ui.js</code></td>
+                  <td>Utilitarios de UI: renderizacao de modais, toasts, spinners, confirmacoes destrutivas e sistema de notificacao in-app.</td>
+                  <td>Nenhuma</td>
+                </tr>
+                <tr>
+                  <td>18</td>
+                  <td><code>users.js</code></td>
+                  <td>Gerenciamento de usuarios (apenas admin). Lista usuarios, altera perfis, desativa contas e forca logout remoto via invalidacao de sessao.</td>
+                  <td><code>db.js</code>, <code>auth.js</code>, <code>ui.js</code></td>
+                </tr>
+                <tr>
+                  <td>19</td>
+                  <td><code>ux.js</code></td>
+                  <td>Micro-interacoes, animacoes de entrada, feedback haptico (Vibration API) e atalhos de teclado. Melhoria progressiva &mdash; degradam graciosamente.</td>
+                  <td><code>ui.js</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">NOTE</span>
+            <div class="callout-body"><p>O modulo <code>calc.js</code> e intencionalmente isolado de qualquer dependencia DOM ou de rede. Isso permite testa-lo em Node.js puro com <code>assert</code> sem precisar de jsdom ou servidor.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 05 — ALGORITMO CENTRAL
+             ===================================================== -->
+        <section class="doc-section" id="s05">
+          <div class="section-header">
+            <span class="section-num">05 /</span>
+            <h2 class="section-title">O ALGORITMO CENTRAL</h2>
+          </div>
+
+          <p>O nucleo matematico do sistema resolve um problema classico de geometria espiral: dado os diametros interno e externo de uma bobina e a espessura do fio, calcular o comprimento total do fio enrolado &mdash; e a partir deste, o numero de pulsos que o sensor registrara durante o consumo completo da espula.</p>
+
+          <h3>Etapa 1 &mdash; Comprimento da Espiral (Arquimedes)</h3>
+          <p>A espiral de Arquimedes descreve matematicamente o enrolamento de fio numa bobina onde cada volta cresce uniformemente pelo diametro do fio. A formula de comprimento de arco aplicada a espiral resulta na seguinte aproximacao pratica usada em engenharia textil:</p>
+
+          <div class="formula-block">
+            <span class="formula">S = &pi; &times; n &times; (D/2 + d/2)</span>
+            <p class="formula-desc">Comprimento total do fio enrolado em espiral (m)</p>
+            <div class="formula-var">
+              <div class="formula-var-item"><span class="sym">S</span><span class="def">Comprimento total do fio (metros)</span></div>
+              <div class="formula-var-item"><span class="sym">&pi;</span><span class="def">Pi &asymp; 3.14159265</span></div>
+              <div class="formula-var-item"><span class="sym">n</span><span class="def">Numero de espiras = (D &minus; d) / (2 &times; e)</span></div>
+              <div class="formula-var-item"><span class="sym">D</span><span class="def">Diametro externo da espula (mm)</span></div>
+              <div class="formula-var-item"><span class="sym">d</span><span class="def">Diametro interno / nucleo (mm)</span></div>
+              <div class="formula-var-item"><span class="sym">e</span><span class="def">Espessura (diametro) do fio (mm)</span></div>
+            </div>
+          </div>
+
+          <p>O numero de espiras <strong>n</strong> e calculado pela diferenca de raios dividida pela espessura do fio, e representa quantas camadas concentricas de fio cabem na secao transversal da bobina. A formula S usa a media aritmetica entre os raios externo e interno multiplicada pelo perimetro medio, o que equivale a integral da espiral de Arquimedes para espacamento constante.</p>
+
+          <h3>Etapa 2 &mdash; Numero de Pulsos (Bhaskara)</h3>
+          <p>O comprimento S obtido na etapa anterior e entao convertido em numero de pulsos. O sensor optico do tear emite um pulso por cada fracao fixa de fio consumido (constante de calibracao da maquina, <strong>K</strong>, em metros/pulso). No entanto, a relacao entre comprimento de fio e pulsos pode nao ser linear quando ha escorregamento ou variacao de tensao &mdash; nesse caso, usa-se uma equacao quadratica cuja solucao e a formula de Bhaskara:</p>
+
+          <div class="formula-block">
+            <span class="formula">a&middot;P&sup2; + b&middot;P + c = 0</span>
+            <span class="formula">P = (&minus;b &plusmn; &radic;(b&sup2; &minus; 4ac)) / (2a)</span>
+            <p class="formula-desc">Onde P e o numero de pulsos, e os coeficientes a, b, c sao derivados das constantes de calibracao da maquina e da constante de escorregamento do fio.</p>
+            <div class="formula-var">
+              <div class="formula-var-item"><span class="sym">P</span><span class="def">Numero de pulsos (inteiro, arredondado para cima)</span></div>
+              <div class="formula-var-item"><span class="sym">a</span><span class="def">Coeficiente de escorregamento quadratico</span></div>
+              <div class="formula-var-item"><span class="sym">b</span><span class="def">&minus;K (constante negativa de calibracao)</span></div>
+              <div class="formula-var-item"><span class="sym">c</span><span class="def">S (comprimento calculado na etapa 1)</span></div>
+            </div>
+          </div>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">NOTE</span>
+            <div class="callout-body"><p>Para maquinas com sensor linear (sem escorregamento), o coeficiente <strong>a = 0</strong>, o discriminante nao e necessario, e o calculo reduz a divisao simples <code>P = S / K</code>. O modulo <code>calc.js</code> detecta esse caso e usa a versao simplificada automaticamente.</p></div>
+          </div>
+
+          <h3>Implementacao em calc.js</h3>
+
+          <pre><code><span class="cmt">/**
+ * calc.js -- Modulo de calculo de pulsos
+ * Gerenciador de Pulso v8.0 - Stickfran Industria
+ * Funcao pura -- sem dependencias externas
+ */</span>
+
+<span class="kw">export function</span> <span class="fn">calcularComprimentoEspiral</span>({ D, d, e }) {
+  <span class="kw">const</span> <span class="var">n</span> = (D - d) / (<span class="num">2</span> * e);           <span class="cmt">// numero de espiras</span>
+  <span class="kw">const</span> <span class="var">S</span> = Math.PI * n * ((D + d) / <span class="num">2</span>);  <span class="cmt">// comprimento em mm</span>
+  <span class="kw">return</span> S / <span class="num">1000</span>;                           <span class="cmt">// converte para metros</span>
+}
+
+<span class="kw">export function</span> <span class="fn">calcularPulsos</span>({ S, K, a = <span class="num">0</span>, b, c }) {
+  <span class="kw">if</span> (a === <span class="num">0</span>) {
+    <span class="kw">return</span> Math.ceil(S / K); <span class="cmt">// caso linear</span>
+  }
+  <span class="kw">const</span> <span class="var">bEfetivo</span> = b ?? -K;
+  <span class="kw">const</span> <span class="var">cEfetivo</span> = c ?? S;
+  <span class="kw">const</span> <span class="var">delta</span> = (bEfetivo ** <span class="num">2</span>) - (<span class="num">4</span> * a * cEfetivo);
+  <span class="kw">if</span> (delta &lt; <span class="num">0</span>) <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">'Delta negativo -- parametros invalidos'</span>);
+  <span class="kw">const</span> <span class="var">P</span> = (-bEfetivo + Math.sqrt(delta)) / (<span class="num">2</span> * a);
+  <span class="kw">return</span> Math.ceil(P);
+}
+
+<span class="kw">export function</span> <span class="fn">calcularFicha</span>(ficha) {
+  <span class="kw">const</span> { diametro_externo_mm, diametro_interno_mm, espessura_fio_mm,
+          constante_k, coef_a } = ficha;
+  <span class="kw">const</span> <span class="var">S</span> = <span class="fn">calcularComprimentoEspiral</span>({
+    D: diametro_externo_mm,
+    d: diametro_interno_mm,
+    e: espessura_fio_mm,
+  });
+  <span class="kw">const</span> <span class="var">pulsos</span> = <span class="fn">calcularPulsos</span>({ S, K: constante_k, a: coef_a });
+  <span class="kw">return</span> {
+    S,
+    pulsos,
+    espiras: Math.floor(
+      (diametro_externo_mm - diametro_interno_mm) / (<span class="num">2</span> * espessura_fio_mm)
+    )
+  };
+}</code></pre>
+        </section>
+
+        <!-- =====================================================
+             SECAO 06 — DESIGN SYSTEM
+             ===================================================== -->
+        <section class="doc-section" id="s06">
+          <div class="section-header">
+            <span class="section-num">06 /</span>
+            <h2 class="section-title">DESIGN SYSTEM V8.0</h2>
+          </div>
+
+          <p>O Design System do Gerenciador de Pulso v8.0 segue tres principios: <strong>identidade industrial</strong> (formas retas, tipografia condensada, paleta austera), <strong>progressividade aurea</strong> (espacamentos baseados na sequencia de Fibonacci) e <strong>glassmorphism funcional</strong> (desfoque e transparencia apenas em elementos navegacionais, nunca em conteudo).</p>
+
+          <h3>Paleta de Cores</h3>
+          <div class="tokens-grid">
+            <div class="token-swatch">
+              <div class="token-color" style="background:#080808;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-base</div>
+                <div class="token-value">#080808</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#111111;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-surface</div>
+                <div class="token-value">#111111</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#161616;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-surface-2</div>
+                <div class="token-value">#161616</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#E8192C;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-red</div>
+                <div class="token-value">#E8192C</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#9c1020;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-red-dim</div>
+                <div class="token-value">#9c1020</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#F5F5F5;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-white</div>
+                <div class="token-value">#F5F5F5</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#a0a0a0;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-white-dim</div>
+                <div class="token-value">#a0a0a0</div>
+              </div>
+            </div>
+            <div class="token-swatch">
+              <div class="token-color" style="background:#2a2a2a;"></div>
+              <div class="token-info">
+                <div class="token-name">--color-border</div>
+                <div class="token-value">#2a2a2a</div>
+              </div>
+            </div>
+          </div>
+
+          <h3>Tipografia</h3>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Papel</th>
+                  <th>Familia</th>
+                  <th>Uso</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Display</td>
+                  <td>Bebas Neue</td>
+                  <td>Titulos de secao, headers, logotipo, numeros grandes</td>
+                </tr>
+                <tr>
+                  <td>UI Labels</td>
+                  <td>Barlow Condensed</td>
+                  <td>Labels de tabela, badges, navegacao, botoes, cabecalhos de card</td>
+                </tr>
+                <tr>
+                  <td>Body</td>
+                  <td>Barlow</td>
+                  <td>Paragrafos, listas, descricoes, mensagens de sistema</td>
+                </tr>
+                <tr>
+                  <td>Mono / Codigo</td>
+                  <td>Share Tech Mono</td>
+                  <td>Code blocks, formulas matematicas, valores de sensor, contadores</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Fibonacci Spacing</h3>
+          <p>Todos os espacamentos do sistema sao tokens derivados da sequencia de Fibonacci. Isso garante proporcao harmonica entre elementos sem decisoes arbitrarias de padding/margin.</p>
+          <div class="spacing-vis">
+            <div class="sp-item"><div class="sp-bar" style="height:1px;"></div><div class="sp-label">--fib1 1px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:2px;"></div><div class="sp-label">--fib2 2px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:3px;"></div><div class="sp-label">--fib3 3px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:5px;"></div><div class="sp-label">--fib5 5px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:8px;"></div><div class="sp-label">--fib8 8px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:13px;"></div><div class="sp-label">--fib13 13px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:21px;"></div><div class="sp-label">--fib21 21px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:34px;"></div><div class="sp-label">--fib34 34px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:55px;"></div><div class="sp-label">--fib55 55px</div></div>
+            <div class="sp-item"><div class="sp-bar" style="height:89px;"></div><div class="sp-label">--fib89 89px</div></div>
+          </div>
+
+          <h3>Glassmorphism</h3>
+          <p>O glassmorphism e aplicado exclusivamente nos elementos de <strong>navegacao e camadas sobrepostas</strong> (header, sidebar, modais, tooltips). O conteudo de dados sempre usa superficies solidas para garantir legibilidade maxima.</p>
+          <pre><code><span class="cmt">/* Receita glassmorphism -- variaveis CSS */</span>
+<span class="var">--glass-bg</span>:     rgba(<span class="num">14</span>, <span class="num">14</span>, <span class="num">14</span>, <span class="num">0.82</span>);
+<span class="var">--glass-border</span>: rgba(<span class="num">232</span>, <span class="num">25</span>, <span class="num">44</span>, <span class="num">0.22</span>);
+<span class="var">--glass-blur</span>:   blur(<span class="num">18px</span>);
+
+<span class="cmt">/* Aplicacao */</span>
+.<span class="var">glass-element</span> {
+  background:              var(--glass-bg);
+  backdrop-filter:         var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border:                  <span class="num">1px</span> solid var(--glass-border);
+}</code></pre>
+        </section>
+
+        <!-- =====================================================
+             SECAO 07 — BANCO DE DADOS
+             ===================================================== -->
+        <section class="doc-section" id="s07">
+          <div class="section-header">
+            <span class="section-num">07 /</span>
+            <h2 class="section-title">BANCO DE DADOS</h2>
+          </div>
+
+          <p>O esquema PostgreSQL e minimalista e orientado a leitura frequente. As quatro tabelas principais cobrem os dominios de cadastro (fios, espulas) e producao (fichas tecnicas, usuarios). Todas tem RLS habilitado.</p>
+
+          <h3>Schema SQL</h3>
+
+          <pre><code><span class="sql-cmt">-- ============================================================
+-- TABELA: tipos_fio
+-- Catalogo de tipos de fio disponiveis na fabrica
+-- ============================================================</span>
+<span class="sql-kw">CREATE TABLE</span> tipos_fio (
+  id                  <span class="sql-type">UUID</span>           <span class="sql-kw">DEFAULT</span> gen_random_uuid() <span class="sql-kw">PRIMARY KEY</span>,
+  nome                <span class="sql-type">TEXT</span>           <span class="sql-kw">NOT NULL</span>,
+  espessura_mm        <span class="sql-type">NUMERIC(6,3)</span>   <span class="sql-kw">NOT NULL</span>,
+  material            <span class="sql-type">TEXT</span>,
+  fornecedor          <span class="sql-type">TEXT</span>,
+  ativo               <span class="sql-type">BOOLEAN</span>        <span class="sql-kw">NOT NULL DEFAULT</span> true,
+  criado_em           <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now(),
+  atualizado_em       <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now()
+);
+
+<span class="sql-cmt">-- ============================================================
+-- TABELA: espulas
+-- Catalogo de modelos de espula (carretel fisico)
+-- ============================================================</span>
+<span class="sql-kw">CREATE TABLE</span> espulas (
+  id                  <span class="sql-type">UUID</span>           <span class="sql-kw">DEFAULT</span> gen_random_uuid() <span class="sql-kw">PRIMARY KEY</span>,
+  modelo              <span class="sql-type">TEXT</span>           <span class="sql-kw">NOT NULL</span>,
+  diametro_externo_mm <span class="sql-type">NUMERIC(8,2)</span>   <span class="sql-kw">NOT NULL</span>,
+  diametro_interno_mm <span class="sql-type">NUMERIC(8,2)</span>   <span class="sql-kw">NOT NULL</span>,
+  largura_mm          <span class="sql-type">NUMERIC(8,2)</span>,
+  material_nucleo     <span class="sql-type">TEXT</span>,
+  ativo               <span class="sql-type">BOOLEAN</span>        <span class="sql-kw">NOT NULL DEFAULT</span> true,
+  criado_em           <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now(),
+  atualizado_em       <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now()
+);
+
+<span class="sql-cmt">-- ============================================================
+-- TABELA: usuarios
+-- Extensao da tabela auth.users do Supabase
+-- ============================================================</span>
+<span class="sql-kw">CREATE TABLE</span> usuarios (
+  id                  <span class="sql-type">UUID</span>           <span class="sql-kw">REFERENCES</span> auth.users(id) <span class="sql-kw">PRIMARY KEY</span>,
+  nome_completo       <span class="sql-type">TEXT</span>           <span class="sql-kw">NOT NULL</span>,
+  perfil              <span class="sql-type">TEXT</span>           <span class="sql-kw">NOT NULL CHECK</span> (perfil <span class="sql-kw">IN</span> (<span class="str">'admin'</span>, <span class="str">'pcp'</span>, <span class="str">'operador'</span>)),
+  setor               <span class="sql-type">TEXT</span>,
+  ativo               <span class="sql-type">BOOLEAN</span>        <span class="sql-kw">NOT NULL DEFAULT</span> true,
+  ultimo_acesso       <span class="sql-type">TIMESTAMPTZ</span>,
+  criado_em           <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now()
+);
+
+<span class="sql-cmt">-- ============================================================
+-- TABELA: fichas_tecnicas
+-- Fichas de producao com parametros calculados
+-- ============================================================</span>
+<span class="sql-kw">CREATE TABLE</span> fichas_tecnicas (
+  id                  <span class="sql-type">UUID</span>           <span class="sql-kw">DEFAULT</span> gen_random_uuid() <span class="sql-kw">PRIMARY KEY</span>,
+  nome                <span class="sql-type">TEXT</span>           <span class="sql-kw">NOT NULL</span>,
+  tipo_fio_id         <span class="sql-type">UUID</span>           <span class="sql-kw">REFERENCES</span> tipos_fio(id),
+  espula_id           <span class="sql-type">UUID</span>           <span class="sql-kw">REFERENCES</span> espulas(id),
+  diametro_mm         <span class="sql-type">NUMERIC(8,3)</span>,
+  constante_k         <span class="sql-type">NUMERIC(10,6)</span>  <span class="sql-kw">NOT NULL</span>,
+  coef_a              <span class="sql-type">NUMERIC(12,8)</span>  <span class="sql-kw">DEFAULT</span> 0,
+  comprimento_m       <span class="sql-type">NUMERIC(10,3)</span>,
+  pulsos              <span class="sql-type">INTEGER</span>,
+  espiras             <span class="sql-type">INTEGER</span>,
+  maquina             <span class="sql-type">TEXT</span>,
+  observacoes         <span class="sql-type">TEXT</span>,
+  versao              <span class="sql-type">INTEGER</span>        <span class="sql-kw">NOT NULL DEFAULT</span> 1,
+  criado_por          <span class="sql-type">UUID</span>           <span class="sql-kw">REFERENCES</span> auth.users(id),
+  atualizado_por      <span class="sql-type">UUID</span>           <span class="sql-kw">REFERENCES</span> auth.users(id),
+  ativo               <span class="sql-type">BOOLEAN</span>        <span class="sql-kw">NOT NULL DEFAULT</span> true,
+  criado_em           <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now(),
+  atualizado_em       <span class="sql-type">TIMESTAMPTZ</span>    <span class="sql-kw">DEFAULT</span> now()
+);</code></pre>
+
+          <h3>Row Level Security (RLS)</h3>
+          <p>Todas as tabelas tem RLS habilitado. As politicas seguem o modelo de perfil armazenado na tabela <code>usuarios</code>, consultado via funcao auxiliar.</p>
+
+          <pre><code><span class="sql-cmt">-- Habilitar RLS em todas as tabelas</span>
+<span class="sql-kw">ALTER TABLE</span> fichas_tecnicas <span class="sql-kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="sql-kw">ALTER TABLE</span> tipos_fio       <span class="sql-kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="sql-kw">ALTER TABLE</span> espulas         <span class="sql-kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="sql-kw">ALTER TABLE</span> usuarios        <span class="sql-kw">ENABLE ROW LEVEL SECURITY</span>;
+
+<span class="sql-cmt">-- Funcao auxiliar para obter perfil do usuario autenticado</span>
+<span class="sql-kw">CREATE OR REPLACE FUNCTION</span> get_user_perfil()
+<span class="sql-kw">RETURNS TEXT AS</span> $$
+  <span class="sql-kw">SELECT</span> perfil <span class="sql-kw">FROM</span> usuarios <span class="sql-kw">WHERE</span> id = auth.uid();
+$$ <span class="sql-kw">LANGUAGE SQL SECURITY DEFINER STABLE</span>;
+
+<span class="sql-cmt">-- Politica: qualquer autenticado le fichas ativas</span>
+<span class="sql-kw">CREATE POLICY</span> <span class="str">"fichas_select"</span> <span class="sql-kw">ON</span> fichas_tecnicas
+  <span class="sql-kw">FOR SELECT USING</span> (auth.uid() <span class="sql-kw">IS NOT NULL AND</span> ativo = true);
+
+<span class="sql-cmt">-- Politica: somente pcp e admin podem inserir/atualizar fichas</span>
+<span class="sql-kw">CREATE POLICY</span> <span class="str">"fichas_write"</span> <span class="sql-kw">ON</span> fichas_tecnicas
+  <span class="sql-kw">FOR ALL USING</span> (get_user_perfil() <span class="sql-kw">IN</span> (<span class="str">'admin'</span>, <span class="str">'pcp'</span>));
+
+<span class="sql-cmt">-- Politica: somente admin gerencia usuarios</span>
+<span class="sql-kw">CREATE POLICY</span> <span class="str">"usuarios_admin_only"</span> <span class="sql-kw">ON</span> usuarios
+  <span class="sql-kw">FOR ALL USING</span> (get_user_perfil() = <span class="str">'admin'</span>);
+
+<span class="sql-cmt">-- Politica: usuario ve apenas seus proprios dados</span>
+<span class="sql-kw">CREATE POLICY</span> <span class="str">"usuarios_self"</span> <span class="sql-kw">ON</span> usuarios
+  <span class="sql-kw">FOR SELECT USING</span> (id = auth.uid());</code></pre>
+        </section>
+
+        <!-- =====================================================
+             SECAO 08 — CONTROLE DE ACESSO
+             ===================================================== -->
+        <section class="doc-section" id="s08">
+          <div class="section-header">
+            <span class="section-num">08 /</span>
+            <h2 class="section-title">CONTROLE DE ACESSO</h2>
+          </div>
+
+          <p>O sistema implementa <strong>RBAC</strong> (Role-Based Access Control) com tres perfis hierarquicos. O perfil e definido no campo <code>perfil</code> da tabela <code>usuarios</code> e validado em dupla camada: no frontend (visibilidade de UI) e no backend (politicas RLS do PostgreSQL).</p>
+
+          <div class="access-grid">
+            <div class="access-card">
+              <div class="access-card-header admin">ADMIN</div>
+              <div class="access-card-body">
+                <ul class="access-list">
+                  <li><span class="perm-allow">&#9679;</span> Gerenciar usuarios</li>
+                  <li><span class="perm-allow">&#9679;</span> Criar/editar fichas</li>
+                  <li><span class="perm-allow">&#9679;</span> Deletar fichas</li>
+                  <li><span class="perm-allow">&#9679;</span> Cadastros (fio/espula)</li>
+                  <li><span class="perm-allow">&#9679;</span> Backups e restore</li>
+                  <li><span class="perm-allow">&#9679;</span> Configuracoes globais</li>
+                  <li><span class="perm-allow">&#9679;</span> Relatorios completos</li>
+                  <li><span class="perm-allow">&#9679;</span> Logs de auditoria</li>
+                  <li><span class="perm-allow">&#9679;</span> Exportacao CSV/PDF</li>
+                </ul>
+              </div>
+            </div>
+            <div class="access-card">
+              <div class="access-card-header pcp">PCP</div>
+              <div class="access-card-body">
+                <ul class="access-list">
+                  <li><span class="perm-deny">&#9679;</span> Gerenciar usuarios</li>
+                  <li><span class="perm-allow">&#9679;</span> Criar/editar fichas</li>
+                  <li><span class="perm-deny">&#9679;</span> Deletar fichas</li>
+                  <li><span class="perm-allow">&#9679;</span> Cadastros (fio/espula)</li>
+                  <li><span class="perm-deny">&#9679;</span> Backups e restore</li>
+                  <li><span class="perm-deny">&#9679;</span> Configuracoes globais</li>
+                  <li><span class="perm-allow">&#9679;</span> Relatorios completos</li>
+                  <li><span class="perm-read">&#9679;</span> Logs (somente leitura)</li>
+                  <li><span class="perm-allow">&#9679;</span> Exportacao CSV/PDF</li>
+                </ul>
+              </div>
+            </div>
+            <div class="access-card">
+              <div class="access-card-header operador">OPERADOR</div>
+              <div class="access-card-body">
+                <ul class="access-list">
+                  <li><span class="perm-deny">&#9679;</span> Gerenciar usuarios</li>
+                  <li><span class="perm-deny">&#9679;</span> Criar/editar fichas</li>
+                  <li><span class="perm-deny">&#9679;</span> Deletar fichas</li>
+                  <li><span class="perm-deny">&#9679;</span> Cadastros (fio/espula)</li>
+                  <li><span class="perm-deny">&#9679;</span> Backups e restore</li>
+                  <li><span class="perm-deny">&#9679;</span> Configuracoes globais</li>
+                  <li><span class="perm-read">&#9679;</span> Relatorios basicos</li>
+                  <li><span class="perm-deny">&#9679;</span> Logs</li>
+                  <li><span class="perm-read">&#9679;</span> Imprimir ficha atual</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--fib8); display: flex; gap: var(--fib21); font-family: var(--font-ui); font-size: 11px; color: var(--color-white-dim);">
+            <span><span class="perm-allow">&#9679;</span> Permitido</span>
+            <span><span class="perm-deny">&#9679;</span> Negado</span>
+            <span><span class="perm-read">&#9679;</span> Somente leitura</span>
+          </div>
+
+          <h3>Implementacao Frontend</h3>
+          <p>O perfil do usuario e lido apos o login e armazenado em memoria pelo modulo <code>auth.js</code>. O modulo <code>ui.js</code> utiliza seletores CSS com atributo <code>data-require-perfil</code> para ocultar elementos proibidos antes da renderizacao:</p>
+
+          <pre><code><span class="cmt">// auth.js -- leitura do perfil apos login</span>
+<span class="kw">export async function</span> <span class="fn">loadUserProfile</span>() {
+  <span class="kw">const</span> { data } = <span class="kw">await</span> db.<span class="fn">select</span>(<span class="str">'usuarios'</span>, {
+    eq: { id: supabase.auth.<span class="fn">getUser</span>()?.id }
+  });
+  currentUser = data[<span class="num">0</span>];
+  <span class="fn">applyAccessControl</span>(currentUser.perfil);
+}
+
+<span class="kw">function</span> <span class="fn">applyAccessControl</span>(perfil) {
+  document.<span class="fn">querySelectorAll</span>(<span class="str">'[data-require-perfil]'</span>).<span class="fn">forEach</span>(el =&gt; {
+    <span class="kw">const</span> required = el.dataset.requirePerfil.<span class="fn">split</span>(<span class="str">','</span>);
+    el.hidden = !required.<span class="fn">includes</span>(perfil);
+  });
+}</code></pre>
+
+          <div class="callout callout-danger">
+            <span class="callout-icon">SECURITY</span>
+            <div class="callout-body"><p>A ocultacao de UI e uma melhoria de experiencia, nao uma barreira de seguranca. Toda autorizacao real e executada pelas politicas RLS no PostgreSQL. Um usuario que manipule o DOM ou faca requests diretos a API REST ainda sera bloqueado pelo banco de dados.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 09 — PWA E OFFLINE
+             ===================================================== -->
+        <section class="doc-section" id="s09">
+          <div class="section-header">
+            <span class="section-num">09 /</span>
+            <h2 class="section-title">PWA E OFFLINE</h2>
+          </div>
+
+          <p>O sistema e instalavel como <strong>Progressive Web App</strong> em tablets e smartphones Android e iOS. O funcionamento offline e critico porque o chao de fabrica da Stickfran possui cobertura Wi-Fi intermitente, e uma parada de maquina por falta de dados no sistema representa custo direto de producao.</p>
+
+          <h3>Service Worker &mdash; Estrategias de Cache</h3>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tipo de Recurso</th>
+                  <th>Estrategia</th>
+                  <th>Timeout</th>
+                  <th>Fallback</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>HTML, CSS, JS, Fontes</td>
+                  <td><strong>Cache First</strong></td>
+                  <td>&mdash;</td>
+                  <td>Erro 504 (raro)</td>
+                </tr>
+                <tr>
+                  <td>Supabase REST API</td>
+                  <td><strong>Network First</strong></td>
+                  <td>6000ms</td>
+                  <td>Cache local (fichas recentes)</td>
+                </tr>
+                <tr>
+                  <td>Supabase Auth</td>
+                  <td><strong>Network Only</strong></td>
+                  <td>&mdash;</td>
+                  <td>Token JWT em localStorage</td>
+                </tr>
+                <tr>
+                  <td>Imagens / Assets</td>
+                  <td><strong>Stale While Revalidate</strong></td>
+                  <td>&mdash;</td>
+                  <td>Versao cacheada anterior</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Versionamento de Cache</h3>
+          <pre><code><span class="cmt">// sw.js -- Service Worker principal</span>
+<span class="kw">const</span> CACHE_NAME  = <span class="str">'gp-v8.0.0'</span>;
+<span class="kw">const</span> API_CACHE   = <span class="str">'gp-api-v8.0.0'</span>;
+<span class="kw">const</span> API_TIMEOUT = <span class="num">6000</span>; <span class="cmt">// ms</span>
+
+<span class="kw">const</span> STATIC_ASSETS = [
+  <span class="str">'/'</span>, <span class="str">'/index.html'</span>, <span class="str">'/manifest.json'</span>,
+  <span class="str">'/css/main.css'</span>, <span class="str">'/js/app.js'</span>,   <span class="str">'/js/calc.js'</span>,
+  <span class="str">'/js/auth.js'</span>,  <span class="str">'/js/fichas.js'</span>, <span class="str">'/js/ui.js'</span>,
+  <span class="cmt">/* ... demais modulos */</span>
+];
+
+self.<span class="fn">addEventListener</span>(<span class="str">'install'</span>, event =&gt; {
+  event.<span class="fn">waitUntil</span>(
+    caches.<span class="fn">open</span>(CACHE_NAME)
+      .then(cache =&gt; cache.<span class="fn">addAll</span>(STATIC_ASSETS))
+  );
+});
+
+self.<span class="fn">addEventListener</span>(<span class="str">'fetch'</span>, event =&gt; {
+  <span class="kw">const</span> { request } = event;
+  <span class="kw">if</span> (request.url.<span class="fn">includes</span>(<span class="str">'supabase.co/rest'</span>)) {
+    event.<span class="fn">respondWith</span>(<span class="fn">networkFirstWithTimeout</span>(request, API_TIMEOUT));
+  } <span class="kw">else</span> {
+    event.<span class="fn">respondWith</span>(<span class="fn">cacheFirst</span>(request));
+  }
+});
+
+<span class="kw">async function</span> <span class="fn">networkFirstWithTimeout</span>(request, timeout) {
+  <span class="kw">const</span> controller = <span class="kw">new</span> <span class="fn">AbortController</span>();
+  <span class="kw">const</span> timer = <span class="fn">setTimeout</span>(() =&gt; controller.<span class="fn">abort</span>(), timeout);
+  <span class="kw">try</span> {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(request, { signal: controller.signal });
+    <span class="fn">clearTimeout</span>(timer);
+    <span class="kw">const</span> cache = <span class="kw">await</span> caches.<span class="fn">open</span>(API_CACHE);
+    cache.<span class="fn">put</span>(request, response.<span class="fn">clone</span>());
+    <span class="kw">return</span> response;
+  } <span class="kw">catch</span> {
+    <span class="fn">clearTimeout</span>(timer);
+    <span class="kw">const</span> cached = <span class="kw">await</span> caches.<span class="fn">match</span>(request);
+    <span class="kw">return</span> cached ?? <span class="kw">new</span> <span class="fn">Response</span>(<span class="str">'{"error":"offline"}'</span>, {
+      headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> }
+    });
+  }
+}</code></pre>
+
+          <h3>Background Sync &mdash; Fila Offline</h3>
+          <p>Quando o usuario cria ou edita uma ficha tecnica sem conexao, a operacao e serializada e enfileirada no <code>IndexedDB</code> pelo modulo <code>storage.js</code>. Quando a conexao e restaurada, o Service Worker dispara o evento <code>sync</code> e o modulo <code>db-state.js</code> processa a fila:</p>
+
+          <pre><code><span class="cmt">// storage.js -- enfileiramento offline</span>
+<span class="kw">export async function</span> <span class="fn">enqueueOperation</span>(op) {
+  <span class="kw">const</span> queue = <span class="fn">getQueue</span>();
+  queue.<span class="fn">push</span>({ ...op, timestamp: Date.<span class="fn">now</span>(), id: crypto.<span class="fn">randomUUID</span>() });
+  <span class="fn">saveQueue</span>(queue);
+  <span class="kw">if</span> (<span class="str">'serviceWorker'</span> <span class="kw">in</span> navigator &amp;&amp; <span class="str">'SyncManager'</span> <span class="kw">in</span> window) {
+    <span class="kw">const</span> reg = <span class="kw">await</span> navigator.serviceWorker.ready;
+    <span class="kw">await</span> reg.sync.<span class="fn">register</span>(<span class="str">'sync-fichas'</span>);
+  }
+}
+
+<span class="cmt">// sw.js -- evento sync</span>
+self.<span class="fn">addEventListener</span>(<span class="str">'sync'</span>, event =&gt; {
+  <span class="kw">if</span> (event.tag === <span class="str">'sync-fichas'</span>) {
+    event.<span class="fn">waitUntil</span>(<span class="fn">processOfflineQueue</span>());
+  }
+});</code></pre>
+
+          <div class="callout callout-warning">
+            <span class="callout-icon">WARNING</span>
+            <div class="callout-body"><p>O Background Sync API nao e suportado pelo Safari / iOS WebKit. Em dispositivos Apple, a sincronizacao acontece apenas quando o usuario abre o app com conexao ativa. Um indicador visual de "operacoes pendentes" e exibido na barra de status para alertar o operador.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 10 — ROADMAP
+             ===================================================== -->
+        <section class="doc-section" id="s10">
+          <div class="section-header">
+            <span class="section-num">10 /</span>
+            <h2 class="section-title">ROADMAP V9.0+</h2>
+          </div>
+
+          <p>As funcionalidades abaixo foram catalogadas durante o desenvolvimento do MVP e postergadas para versoes futuras, por criterios de escopo, tempo ou complexidade de integracao.</p>
+
+          <h3>Features Planejadas</h3>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot planned"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">Dashboard Analytics <span class="roadmap-tag tag-planned">Planejado</span></div>
+              <p class="roadmap-desc">Painel gerencial com graficos de consumo de fio por periodo, maquina e tipo de fio. Metricas de produtividade e alertas de desvio. Implementado via Canvas API ou integracao com Chart.js.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot planned"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">API Webhooks de Saida <span class="roadmap-tag tag-planned">Planejado</span></div>
+              <p class="roadmap-desc">Notificacoes HTTP para sistemas ERP externos (SAP, TOTVS) quando fichas tecnicas sao criadas ou atualizadas. Configuracao de endpoints por admin com autenticacao HMAC.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot planned"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">QR Codes por Ficha Tecnica <span class="roadmap-tag tag-planned">Planejado</span></div>
+              <p class="roadmap-desc">Geracao de QR code unico por ficha, imprimivel na etiqueta da espula. O operador escaneia com o celular para carregar a ficha imediatamente, sem navegar pelo sistema.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot research"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">Realtime Colaborativo <span class="roadmap-tag tag-research">Em Pesquisa</span></div>
+              <p class="roadmap-desc">Uso do Supabase Realtime (WebSockets) para exibir edicoes concorrentes de fichas em tempo real e resolver conflitos via CRDT ou OT. Dependente de analise de custo de conexoes WebSocket no plano Supabase contratado.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot research"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">Calibracao Automatica via Sensor IoT <span class="roadmap-tag tag-research">Em Pesquisa</span></div>
+              <p class="roadmap-desc">Integracao com sensores de pulso via MQTT/WebSocket para calibrar automaticamente a constante K de cada maquina, eliminando parametrizacao manual e reduzindo erro humano.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot stretch"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">App Mobile Nativo (Capacitor) <span class="roadmap-tag tag-stretch">Stretch</span></div>
+              <p class="roadmap-desc">Empacotamento do PWA como app nativo Android/iOS via Capacitor para acesso a APIs nativas como camera (leitura de QR), Bluetooth (sensor) e notificacoes push.</p>
+            </div>
+          </div>
+
+          <div class="roadmap-item">
+            <div class="roadmap-dot stretch"></div>
+            <div class="roadmap-content">
+              <div class="roadmap-title">Multi-tenancy (SaaS) <span class="roadmap-tag tag-stretch">Stretch</span></div>
+              <p class="roadmap-desc">Expansao do modelo para multiplas empresas do grupo Stickfran com isolamento de dados por schema PostgreSQL. Painel administrativo centralizado de tenants.</p>
+            </div>
+          </div>
+
+          <div class="callout callout-todo">
+            <span class="callout-icon">TODO</span>
+            <div class="callout-body"><p>Antes do v9.0, e necessario implementar <strong>testes automatizados</strong> para o modulo <code>calc.js</code> com casos de borda (fio muito fino, espula muito pequena, delta negativo). A cobertura atual e zero.</p></div>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             SECAO 11 — LIMITACOES E DECISOES
+             ===================================================== -->
+        <section class="doc-section" id="s11">
+          <div class="section-header">
+            <span class="section-num">11 /</span>
+            <h2 class="section-title">LIMITACOES E DECISOES DE DESIGN</h2>
+          </div>
+
+          <p>Esta secao documenta as decisoes arquiteturais relevantes e o que foi deliberadamente deixado fora do escopo do MVP, com o racional de cada escolha.</p>
+
+          <h3>O Que Ficou Fora do Escopo</h3>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Motivo da Exclusao</th>
+                  <th>Alternativa Adotada</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>TypeScript</td>
+                  <td>Adiciona etapa de build; equipe de manutencao nao possui familiaridade com o toolchain TS</td>
+                  <td>JSDoc com anotacoes de tipo para intellisense</td>
+                </tr>
+                <tr>
+                  <td>Framework reativo (React/Vue)</td>
+                  <td>Overhead de runtime inaceitavel nos tablets Android de baixo custo do chao de fabrica</td>
+                  <td>Vanilla JS com atualizacao manual de DOM</td>
+                </tr>
+                <tr>
+                  <td>ORM / Query Builder</td>
+                  <td>Camada extra de abstracao desnecessaria com apenas 4 tabelas</td>
+                  <td>Fetch direto para PostgREST com helpers em <code>db-base.js</code></td>
+                </tr>
+                <tr>
+                  <td>Testes automatizados E2E</td>
+                  <td>Fora do tempo de desenvolvimento do MVP; requer setup Playwright/Cypress</td>
+                  <td>Testes manuais documentados em checklist</td>
+                </tr>
+                <tr>
+                  <td>i18n / Multiplos idiomas</td>
+                  <td>Sistema de uso exclusivo da Stickfran Brasil; requisito inexistente</td>
+                  <td>Portugues brasileiro hardcoded</td>
+                </tr>
+                <tr>
+                  <td>Historico com diff detalhado</td>
+                  <td>Complexidade de implementacao vs. beneficio; operadores nao usariam</td>
+                  <td>Log simplificado com campo <code>versao</code> incremental</td>
+                </tr>
+                <tr>
+                  <td>Notificacoes push server-side</td>
+                  <td>Requer servidor de push proprio ou servico pago; sem case de uso claro no MVP</td>
+                  <td>Indicador visual in-app de pendencias offline</td>
+                </tr>
+                <tr>
+                  <td>Resolucao de conflitos offline</td>
+                  <td>Complexidade de CRDT/OT desnecessaria dado o padrao de uso (raramente dois PCPs editam a mesma ficha)</td>
+                  <td>Last-write-wins com alerta visual de "atualizado por outro usuario"</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Decisoes Arquiteturais Justificadas</h3>
+
+          <h4>Por que Supabase e nao Firebase?</h4>
+          <p>O PostgreSQL oferece <strong>tipos numericos de alta precisao</strong> (<code>NUMERIC(12,8)</code>) necessarios para os coeficientes do algoritmo Bhaskara. O Firestore, sendo um banco de documentos, nao garante a mesma fidelidade numerica para calculos de engenharia. Alem disso, o RLS do PostgreSQL e mais expressivo e auditavel que as Firebase Security Rules.</p>
+
+          <h4>Por que sem bundler?</h4>
+          <p>O deploy de arquivos estaticos sem build step simplifica radicalmente a manutencao. Um tecnico de TI sem experiencia em Node.js/npm consegue atualizar o sistema fazendo upload de um arquivo JS modificado via FTP. Isso e um requisito operacional da Stickfran.</p>
+
+          <h4>Por que glassmorphism apenas na navegacao?</h4>
+          <p>O <code>backdrop-filter: blur()</code> tem custo de GPU nao negligenciavel. Em tablets de entrada com GPUs integradas fracas, aplicar blur em elementos de conteudo causaria scroll jank. A limitacao ao header e sidebar &mdash; elementos estacionarios &mdash; garante 60fps mesmo em hardware modesto.</p>
+
+          <h4>Por que Fibonacci como sistema de espacamento?</h4>
+          <p>A sequencia de Fibonacci produz proporcoes harmonicamente relacionadas sem a rigidez de sistemas baseados em multiplos de 4 ou 8. No contexto industrial, onde telas sao frequentemente consultadas de longe (operador em pe na maquina), o contraste de escala entre elementos adjacentes melhora a escaneabilidade.</p>
+
+          <div class="callout callout-warning">
+            <span class="callout-icon">WARNING</span>
+            <div class="callout-body"><p><strong>Limitacao conhecida:</strong> O algoritmo de calculo assume que o fio e enrolado em uma unica camada plana (espiral 2D). Fios enrolados em multiplas camadas paralelas (como os de bordar em cones industriais) requerem a formula volumetrica de toroide, que ainda nao esta implementada. Esses casos devem ser calculados manualmente e inseridos como valores fixos na ficha.</p></div>
+          </div>
+
+          <div class="callout callout-note">
+            <span class="callout-icon">NOTE</span>
+            <div class="callout-body"><p>A versao v8.0 representa a oitava iteracao do sistema (anteriormente mantido em planilha Excel, depois Google Sheets, depois um formulario PHP). O numero de versao reflete o historico de evolucao interno da Stickfran, nao o numero de lancamentos publicos deste repositorio.</p></div>
+          </div>
+
+          <!-- Footer -->
+          <div class="doc-footer">
+            <div class="doc-footer-brand">STICKFRAN <span>INDUSTRIA</span></div>
+            <div class="doc-footer-meta">Gerenciador de Pulso v8.0 &nbsp;&middot;&nbsp; Documento Tecnico MVP &nbsp;&middot;&nbsp; 2026 &nbsp;&middot;&nbsp; Confidencial</div>
+          </div>
+
+        </section>
+
+      </div><!-- /.doc-body -->
+    </main>
+
+  </div><!-- /.layout -->
+
+  <!-- =====================================================
+       JAVASCRIPT -- IntersectionObserver TOC
+       ===================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      var tocLinks = document.querySelectorAll('.toc-item a[data-section]');
+      var sections = document.querySelectorAll('.doc-section[id]');
+
+      if (!('IntersectionObserver' in window)) return;
+
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var id = entry.target.id;
+            tocLinks.forEach(function (link) {
+              link.classList.toggle('active', link.dataset.section === id);
+            });
+          }
+        });
+      }, {
+        rootMargin: '-80px 0px -60% 0px',
+        threshold: 0,
+      });
+
+      sections.forEach(function (section) { observer.observe(section); });
+
+      tocLinks.forEach(function (link) {
+        link.addEventListener('click', function () {
+          tocLinks.forEach(function (l) { l.classList.remove('active'); });
+          this.classList.add('active');
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>

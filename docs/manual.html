@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual do Usuário — Gerenciador de Pulso v8.0 · Stickfran</title>
+  <link rel="icon" href="../img/icons/icon-48x48.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    /* ── TOKENS ── */
+    :root {
+      --black:   #080808;
+      --black2:  #0f0f0f;
+      --black3:  #161616;
+      --black4:  #1e1e1e;
+      --black5:  #262626;
+      --red:     #E8192C;
+      --red-dim: #a01020;
+      --red-glow:rgba(232,25,44,.18);
+      --white:   #F5F5F5;
+      --white2:  #c8c8c8;
+      --white3:  #8a8a8a;
+      --amber:   #f59e0b;
+      --amber-dim:rgba(245,158,11,.12);
+      --teal:    #00c9a7;
+
+      --f-disp:  'Bebas Neue', sans-serif;
+      --f-cond:  'Barlow Condensed', sans-serif;
+      --f-body:  'Barlow', sans-serif;
+      --f-mono:  'Share Tech Mono', monospace;
+
+      /* Fibonacci spacing */
+      --fib1:  1px;  --fib2:  2px;  --fib3:  3px;  --fib5:  5px;
+      --fib8:  8px;  --fib13: 13px; --fib21: 21px; --fib34: 34px;
+      --fib55: 55px; --fib89: 89px;
+
+      --header-h: 56px;
+      --sidebar-w: 240px;
+      --content-max: 800px;
+      --radius: 4px;
+    }
+
+    /* ── BASE ── */
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--f-body);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+    }
+
+    a { color: var(--red); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    p { margin-bottom: var(--fib21); }
+    strong { color: var(--white); font-weight: 700; }
+    em { color: var(--white2); font-style: italic; }
+
+    /* ── GLASSMORPHISM ── */
+    .glass {
+      background: rgba(8,8,8,.72);
+      backdrop-filter: blur(18px) saturate(1.4);
+      -webkit-backdrop-filter: blur(18px) saturate(1.4);
+      border-bottom: 1.5px solid rgba(232,25,44,.35);
+    }
+
+    /* ── HEADER ── */
+    #site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--fib34);
+    }
+    .header-brand {
+      font-family: var(--f-disp);
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: var(--fib8);
+    }
+    .header-brand span { color: var(--red); }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--fib21);
+    }
+    .header-nav a {
+      font-family: var(--f-cond);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--white2);
+      transition: color .2s;
+    }
+    .header-nav a:hover { color: var(--red); text-decoration: none; }
+    .header-nav a.cta {
+      background: var(--red);
+      color: var(--white);
+      padding: var(--fib5) var(--fib13);
+      border-radius: var(--radius);
+    }
+    .header-nav a.cta:hover { background: #c0101f; }
+
+    /* ── HAMBURGER ── */
+    #hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: var(--fib5);
+      background: none;
+      border: none;
+    }
+    #hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: all .25s;
+    }
+
+    /* ── LAYOUT ── */
+    #layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      padding-top: var(--header-h);
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      width: var(--sidebar-w);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: rgba(8,8,8,.85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(232,25,44,.18);
+      padding: var(--fib21) 0 var(--fib55);
+      z-index: 100;
+      scrollbar-width: thin;
+      scrollbar-color: var(--red-dim) transparent;
+    }
+    #sidebar::-webkit-scrollbar { width: 3px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: var(--red-dim); border-radius: 3px; }
+
+    .toc-label {
+      font-family: var(--f-cond);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--white3);
+      padding: 0 var(--fib21) var(--fib8);
+    }
+    .toc-link {
+      display: block;
+      font-family: var(--f-cond);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: var(--white3);
+      padding: var(--fib5) var(--fib21);
+      border-left: 3px solid transparent;
+      transition: color .2s, border-color .2s, background .2s;
+      text-decoration: none;
+      line-height: 1.4;
+    }
+    .toc-link:hover {
+      color: var(--white);
+      background: rgba(232,25,44,.06);
+      text-decoration: none;
+    }
+    .toc-link.active {
+      color: var(--red);
+      border-left-color: var(--red);
+      background: rgba(232,25,44,.08);
+    }
+    .toc-divider {
+      height: 1px;
+      background: rgba(255,255,255,.06);
+      margin: var(--fib13) var(--fib21);
+    }
+    .sidebar-cta {
+      margin: var(--fib21);
+      display: block;
+      text-align: center;
+      background: var(--red);
+      color: var(--white) !important;
+      font-family: var(--f-cond);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: var(--fib8) var(--fib13);
+      border-radius: var(--radius);
+      border-left: 3px solid transparent !important;
+      transition: background .2s;
+    }
+    .sidebar-cta:hover { background: #c0101f !important; text-decoration: none; }
+
+    /* ── MAIN CONTENT ── */
+    #content {
+      grid-column: 2;
+      padding: var(--fib55) var(--fib55) var(--fib89);
+    }
+    .content-inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+    }
+
+    /* ── DOC HEADER ── */
+    .doc-header {
+      margin-bottom: var(--fib55);
+      padding-bottom: var(--fib34);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .doc-eyebrow {
+      font-family: var(--f-cond);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: var(--fib8);
+    }
+    .doc-title {
+      font-family: var(--f-disp);
+      font-size: clamp(42px, 6vw, 72px);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: var(--fib8);
+    }
+    .doc-subtitle {
+      font-family: var(--f-cond);
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--white3);
+      letter-spacing: .5px;
+    }
+
+    /* ── SECTION ── */
+    .doc-section {
+      margin-bottom: var(--fib89);
+      scroll-margin-top: calc(var(--header-h) + var(--fib21));
+    }
+    .section-eyebrow {
+      font-family: var(--f-cond);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: var(--fib5);
+    }
+    .section-title {
+      font-family: var(--f-disp);
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: var(--fib3);
+      line-height: 1.1;
+    }
+    .red-line {
+      width: var(--fib55);
+      height: 3px;
+      background: var(--red);
+      margin-bottom: var(--fib34);
+    }
+
+    /* ── H3 / H4 ── */
+    h3 {
+      font-family: var(--f-cond);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--white);
+      margin: var(--fib34) 0 var(--fib13);
+    }
+    h4 {
+      font-family: var(--f-cond);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--white2);
+      margin: var(--fib21) 0 var(--fib8);
+    }
+
+    /* ── CALLOUTS ── */
+    .callout {
+      border-left: 3px solid;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: var(--fib13) var(--fib21);
+      margin: var(--fib21) 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .callout-label {
+      font-family: var(--f-cond);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      margin-bottom: var(--fib5);
+    }
+    .callout.info {
+      border-color: var(--white2);
+      background: rgba(245,245,245,.05);
+    }
+    .callout.info .callout-label { color: var(--white2); }
+    .callout.warning {
+      border-color: var(--amber);
+      background: var(--amber-dim);
+    }
+    .callout.warning .callout-label { color: var(--amber); }
+    .callout.danger {
+      border-color: var(--red);
+      background: var(--red-glow);
+    }
+    .callout.danger .callout-label { color: var(--red); }
+
+    /* ── STEPS ── */
+    .steps { list-style: none; margin: var(--fib21) 0; }
+    .step {
+      display: flex;
+      gap: var(--fib21);
+      align-items: flex-start;
+      margin-bottom: var(--fib21);
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--red);
+      color: var(--white);
+      font-family: var(--f-disp);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .step-body { flex: 1; }
+    .step-title {
+      font-family: var(--f-cond);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--white);
+      margin-bottom: var(--fib3);
+    }
+    .step-desc {
+      font-size: 14px;
+      color: var(--white2);
+      line-height: 1.55;
+    }
+
+    /* ── TABLES ── */
+    .table-wrap { overflow-x: auto; margin: var(--fib21) 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead tr {
+      background: var(--red);
+    }
+    thead th {
+      font-family: var(--f-cond);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--white);
+      padding: var(--fib8) var(--fib13);
+      text-align: left;
+    }
+    tbody tr:nth-child(odd)  { background: rgba(255,255,255,.025); }
+    tbody tr:nth-child(even) { background: rgba(255,255,255,.055); }
+    tbody tr:hover           { background: rgba(232,25,44,.08); }
+    tbody td {
+      padding: var(--fib8) var(--fib13);
+      color: var(--white2);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: top;
+    }
+    tbody td strong { color: var(--white); }
+
+    /* ── CODE ── */
+    pre, code {
+      font-family: var(--f-mono);
+      font-size: 13px;
+    }
+    code {
+      background: rgba(232,25,44,.12);
+      color: var(--red);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    pre {
+      background: #111;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: var(--fib21);
+      overflow-x: auto;
+      margin: var(--fib21) 0;
+      line-height: 1.55;
+      color: var(--white2);
+    }
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+    .code-label {
+      font-family: var(--f-cond);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--white3);
+      margin-bottom: var(--fib5);
+    }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-family: var(--f-cond);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+    .badge-admin    { background: var(--red);  color: var(--white); }
+    .badge-pcp      { background: var(--white); color: var(--black); }
+    .badge-operator { background: #3a3a3a;     color: var(--white2); }
+    .badge-ok       { background: #166534;     color: #bbf7d0; }
+    .badge-warn     { background: #854d0e;     color: #fef08a; }
+
+    /* ── DEFINITION LIST ── */
+    dl { margin: var(--fib13) 0; }
+    dt {
+      font-family: var(--f-cond);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--white);
+      margin-top: var(--fib13);
+    }
+    dd {
+      font-size: 14px;
+      color: var(--white2);
+      margin-left: var(--fib21);
+      margin-top: var(--fib3);
+    }
+
+    /* ── FIELD CARDS ── */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--fib13);
+      margin: var(--fib21) 0;
+    }
+    .field-card {
+      background: var(--black3);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--radius);
+      padding: var(--fib13);
+    }
+    .field-name {
+      font-family: var(--f-mono);
+      font-size: 12px;
+      color: var(--red);
+      margin-bottom: var(--fib5);
+    }
+    .field-desc {
+      font-size: 13px;
+      color: var(--white2);
+      line-height: 1.5;
+    }
+
+    /* ── PROFILE CARD ── */
+    .profile-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--fib13);
+      background: var(--black3);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--radius);
+      padding: var(--fib13) var(--fib21);
+      margin-bottom: var(--fib13);
+    }
+    .profile-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--f-disp);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .profile-icon.admin    { background: var(--red); color: var(--white); }
+    .profile-icon.pcp      { background: var(--white); color: var(--black); }
+    .profile-icon.operator { background: #3a3a3a; color: var(--white2); }
+    .profile-info-name {
+      font-family: var(--f-cond);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .profile-info-desc {
+      font-size: 13px;
+      color: var(--white2);
+      margin-top: var(--fib3);
+      line-height: 1.5;
+    }
+
+    /* ── ASCII SCREEN ── */
+    .screen-mock {
+      background: #0a0a0a;
+      border: 1px solid rgba(232,25,44,.3);
+      border-radius: var(--radius);
+      padding: var(--fib21);
+      margin: var(--fib21) 0;
+      font-family: var(--f-mono);
+      font-size: 12px;
+      color: #a0a0a0;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+    .screen-mock .hl  { color: var(--white); }
+    .screen-mock .red { color: var(--red); }
+    .screen-mock .grn { color: var(--teal); }
+    .screen-mock .dim { color: #4a4a4a; }
+
+    /* ── FORMULA BOX ── */
+    .formula-box {
+      background: var(--black4);
+      border: 1px solid rgba(232,25,44,.25);
+      border-radius: var(--radius);
+      padding: var(--fib21) var(--fib34);
+      margin: var(--fib21) 0;
+      text-align: center;
+    }
+    .formula-title {
+      font-family: var(--f-cond);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: var(--fib8);
+    }
+    .formula-eq {
+      font-family: var(--f-mono);
+      font-size: 16px;
+      color: var(--white);
+      line-height: 1.8;
+    }
+    .formula-note {
+      font-size: 12px;
+      color: var(--white3);
+      margin-top: var(--fib8);
+      font-style: italic;
+    }
+
+    /* ── GLOSSARY ── */
+    .glossary-entry {
+      padding: var(--fib13) 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .glossary-term {
+      font-family: var(--f-cond);
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: var(--fib8);
+      margin-bottom: var(--fib3);
+    }
+    .glossary-def {
+      font-size: 14px;
+      color: var(--white2);
+      line-height: 1.6;
+    }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; margin: var(--fib13) 0; }
+    .checklist li {
+      font-size: 14px;
+      color: var(--white2);
+      padding: var(--fib5) 0;
+      padding-left: var(--fib21);
+      position: relative;
+    }
+    .checklist li::before {
+      content: '▸';
+      color: var(--red);
+      position: absolute;
+      left: 0;
+    }
+
+    /* ── FOOTER ── */
+    #doc-footer {
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding: var(--fib34) 0 var(--fib55);
+      margin-top: var(--fib89);
+      font-family: var(--f-cond);
+      font-size: 12px;
+      color: var(--white3);
+      letter-spacing: .5px;
+      text-align: center;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      #site-header, #sidebar, #hamburger { display: none !important; }
+      #layout { grid-template-columns: 1fr; padding-top: 0; }
+      #content { grid-column: 1; padding: 20px; }
+      body { background: #fff; color: #000; }
+      .doc-section { page-break-inside: avoid; }
+    }
+
+    /* ── RESPONSIVE 987px ── */
+    @media (max-width: 987px) {
+      :root { --sidebar-w: 220px; }
+      #content { padding: var(--fib34) var(--fib34) var(--fib89); }
+    }
+
+    /* ── RESPONSIVE 610px ── */
+    @media (max-width: 610px) {
+      #layout { grid-template-columns: 1fr; }
+      #sidebar {
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+        z-index: 150;
+        width: 260px;
+      }
+      #sidebar.open { transform: translateX(0); }
+      #content { grid-column: 1; padding: var(--fib21) var(--fib21) var(--fib89); }
+      #hamburger { display: flex; }
+      .header-nav .nav-hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+<header id="site-header" class="glass">
+  <div class="header-brand">
+    <span>◆</span> Gerenciador de Pulso
+    <span style="font-family:var(--f-cond);font-size:13px;font-weight:600;color:var(--white3);letter-spacing:1px;margin-left:4px">v8.0</span>
+  </div>
+  <nav class="header-nav">
+    <a href="../landing.html" class="nav-hide-mobile">← Início</a>
+    <a href="../index.html" class="cta">Abrir Sistema</a>
+    <button id="hamburger" aria-label="Menu" onclick="document.getElementById('sidebar').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════ LAYOUT ═══════════════════════════════ -->
+<div id="layout">
+
+  <!-- ──────────────── SIDEBAR ──────────────── -->
+  <aside id="sidebar" aria-label="Índice do manual">
+    <div class="toc-label">Índice</div>
+    <a class="toc-link" href="#intro">1. Introdução</a>
+    <a class="toc-link" href="#primeiros-passos">2. Primeiros Passos</a>
+    <a class="toc-link" href="#consulta">3. Tela de Consulta</a>
+    <a class="toc-link" href="#resultados">4. Entendendo os Resultados</a>
+    <a class="toc-link" href="#fichas">5. Fichas Técnicas</a>
+    <a class="toc-link" href="#historico">6. Histórico de Cálculos</a>
+    <a class="toc-link" href="#cadastros">7. Cadastros Base</a>
+    <a class="toc-link" href="#usuarios">8. Gerenciamento de Usuários</a>
+    <a class="toc-link" href="#relatorios">9. Relatórios e Exportação</a>
+    <a class="toc-link" href="#backup">10. Backup</a>
+    <a class="toc-link" href="#pwa">11. Instalação PWA</a>
+    <a class="toc-link" href="#problemas">12. Resolução de Problemas</a>
+    <div class="toc-divider"></div>
+    <a class="toc-link" href="#glossario">Glossário Têxtil</a>
+    <div class="toc-divider"></div>
+    <a class="sidebar-cta toc-link" href="../index.html">→ Abrir Sistema</a>
+  </aside>
+
+  <!-- ──────────────── CONTENT ──────────────── -->
+  <main id="content">
+    <div class="content-inner">
+
+      <!-- DOC HEADER -->
+      <div class="doc-header">
+        <div class="doc-eyebrow">Stickfran Indústria · Documentação Oficial</div>
+        <h1 class="doc-title">Manual do Usuário</h1>
+        <div class="doc-subtitle">Gerenciador de Pulso Espuladeira · Versão 8.0 · Março 2026</div>
+      </div>
+
+      <!-- ═══════════════════ SEÇÃO 1: INTRODUÇÃO ═══════════════════ -->
+      <section class="doc-section" id="intro">
+        <div class="section-eyebrow">Seção 01</div>
+        <h2 class="section-title">Introdução</h2>
+        <div class="red-line"></div>
+
+        <p>O <strong>Gerenciador de Pulso</strong> é o sistema digital da Stickfran Indústria para configuração precisa de espuladeiras têxteis. Ele elimina planilhas, cálculos manuais e erros de programação das máquinas ao calcular automaticamente — e com exatidão milimétrica — quantos pulsos o contador eletrônico de cada espuladeira deve receber para produzir bobinas de comprimento exato.</p>
+
+        <p>Desenvolvido para o chão de fábrica real, o sistema opera 100% offline após a primeira carga, funciona em celular, tablet e desktop, e armazena histórico completo de todas as configurações realizadas.</p>
+
+        <h3>O que é uma Espuladeira?</h3>
+        <p>A espuladeira é a máquina responsável por rebobinar fio de um rolo grande (cone) para bobinas menores (espulas) que serão inseridas nas máquinas de costura ou tecelagem. A espula precisa ter um comprimento exato de fio — nem a mais, nem a menos — para garantir consistência no processo produtivo e evitar desperdício.</p>
+
+        <h3>O Problema que o Sistema Resolve</h3>
+        <p>Cada modelo de espula tem dimensões físicas distintas: comprimento útil, diâmetros interno e externo variam. O fio, por sua vez, tem espessura (título) variável. A combinação desses fatores determina exatamente quantas voltas o fio dará ao redor da espula e, portanto, quantos pulsos o contador da máquina deve registrar para cortar o fio no momento certo.</p>
+
+        <p>Antes do sistema, esse cálculo era feito com régua, fórmula escrita em papel e muita experiência do operador. Erros geravam bobinas curtas (fio insuficiente, paradas na costura) ou bobinas longas (fio sobrando, desperdício de insumo). O Gerenciador de Pulso automatiza inteiramente esse cálculo usando as fórmulas de <strong>Arquimedes</strong> (geometria da espiral) e <strong>Bhaskara</strong> (equação do segundo grau).</p>
+
+        <div class="callout info">
+          <div class="callout-label">Contexto de uso</div>
+          O sistema foi projetado para operadores de espuladeira, técnicos de PCP (Planejamento e Controle da Produção) e administradores de fábrica. Cada perfil de usuário tem acesso diferenciado às funcionalidades.
+        </div>
+
+        <h3>Algoritmo Central: Arquimedes + Bhaskara</h3>
+        <p>O coração matemático do sistema resolve a seguinte pergunta: <em>"Dado que quero X metros de fio numa espula de diâmetro interno D₁ e externo D₂, com comprimento útil L e fio de título T, quantas voltas — e portanto quantos pulsos — são necessários?"</em></p>
+
+        <div class="formula-box">
+          <div class="formula-title">Espiral de Arquimedes — Comprimento acumulado</div>
+          <div class="formula-eq">
+            C(n) = π · n · (D_interno + n · espessura_fio)<br>
+            <span style="font-size:13px;color:var(--white3)">onde n = número de voltas acumuladas</span>
+          </div>
+          <div class="formula-note">A cada volta, o raio cresce em uma espessura de fio — a clássica espiral de Arquimedes.</div>
+        </div>
+
+        <p>Como queremos resolver para <em>n</em> (número de voltas) dado um comprimento alvo, chegamos a uma equação do segundo grau — e aí entra <strong>Bhaskara</strong>:</p>
+
+        <div class="formula-box">
+          <div class="formula-title">Equação Quadrática — Resolvendo para n (Bhaskara)</div>
+          <div class="formula-eq">
+            π · e · n² + π · D_interno · n − C_alvo = 0<br><br>
+            n = (−π·D_i + √(π²·D_i² + 4·π·e·C_alvo)) / (2·π·e)
+          </div>
+          <div class="formula-note">e = espessura do fio · C_alvo = comprimento alvo de fio em mm · n = voltas necessárias</div>
+        </div>
+
+        <p>Com o número de voltas <em>n</em>, o sistema multiplica pelo número de fusos, aplica o fator de calibração do pulso e entrega o valor inteiro que deve ser configurado no contador da espuladeira.</p>
+
+        <div class="callout info">
+          <div class="callout-label">Nota para operadores</div>
+          Você não precisa entender a matemática para usar o sistema. Basta selecionar a ficha correta, informar o número de fusos e clicar em Calcular. O sistema faz todo o resto.
+        </div>
+
+        <h3>Versão 8.0 — O que Há de Novo</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Recurso</th><th>Versão Anterior</th><th>v8.0</th></tr></thead>
+            <tbody>
+              <tr><td>Modo offline</td><td>Parcial</td><td><strong>100% funcional via Service Worker</strong></td></tr>
+              <tr><td>Histórico</td><td>20 registros</td><td><strong>Ilimitado, com busca e filtros</strong></td></tr>
+              <tr><td>Exportação</td><td>CSV apenas</td><td><strong>CSV + PDF com logo Stickfran</strong></td></tr>
+              <tr><td>Relatórios</td><td>—</td><td><strong>Dashboard de consumo por período</strong></td></tr>
+              <tr><td>Usuários</td><td>Senha única</td><td><strong>Multi-usuário com perfis e logs</strong></td></tr>
+              <tr><td>Backup</td><td>Manual</td><td><strong>Export/import JSON com validação</strong></td></tr>
+              <tr><td>PWA</td><td>Android</td><td><strong>Android + iOS + Desktop</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 2: PRIMEIROS PASSOS ═══════════════════ -->
+      <section class="doc-section" id="primeiros-passos">
+        <div class="section-eyebrow">Seção 02</div>
+        <h2 class="section-title">Primeiros Passos</h2>
+        <div class="red-line"></div>
+
+        <p>Esta seção explica como acessar o sistema pela primeira vez, realizar login e entender os perfis de usuário disponíveis.</p>
+
+        <h3>Acessando o Sistema</h3>
+        <p>O Gerenciador de Pulso é acessado diretamente pelo navegador. Não é necessário instalar nenhum software — basta abrir o endereço fornecido pelo TI da Stickfran no navegador do celular, tablet ou computador.</p>
+
+        <div class="callout info">
+          <div class="callout-label">Endereço de acesso</div>
+          O endereço interno da fábrica é fornecido pelo setor de TI. Em geral segue o padrão <code>http://192.168.x.x:porta</code> na rede local, ou um domínio específico para acesso externo.
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Abra o navegador</div>
+              <div class="step-desc">Use Chrome, Edge, Firefox ou Safari. Para melhor experiência em celular, use o Chrome (Android) ou Safari (iPhone).</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Digite o endereço do sistema</div>
+              <div class="step-desc">Na barra de endereços, insira o URL fornecido pelo TI e pressione Enter.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Tela de Login</div>
+              <div class="step-desc">Você verá a tela de login com campos de <strong>Usuário</strong> e <strong>Senha</strong>. Insira as credenciais fornecidas pelo seu supervisor ou pelo administrador do sistema.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Entrar</div>
+              <div class="step-desc">Após digitar usuário e senha corretos, clique no botão vermelho <strong>Entrar</strong>. O sistema carregará o painel principal correspondente ao seu perfil.</div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="screen-mock">
+<span class="dim">┌─────────────────────────────────────────────────────────┐</span>
+<span class="dim">│</span>  <span class="red">◆ GERENCIADOR DE PULSO</span>  <span class="dim">Stickfran Indústria  v8.0      │</span>
+<span class="dim">├─────────────────────────────────────────────────────────┤</span>
+<span class="dim">│</span>                                                         <span class="dim">│</span>
+<span class="dim">│</span>         <span class="hl">Usuário</span>  [_________________________]           <span class="dim">│</span>
+<span class="dim">│</span>           <span class="hl">Senha</span>  [_________________________]           <span class="dim">│</span>
+<span class="dim">│</span>                                                         <span class="dim">│</span>
+<span class="dim">│</span>                  <span class="red">[ ENTRAR ]</span>                           <span class="dim">│</span>
+<span class="dim">│</span>                                                         <span class="dim">│</span>
+<span class="dim">└─────────────────────────────────────────────────────────┘</span>
+        </div>
+
+        <h3>Credenciais Padrão</h3>
+        <div class="callout warning">
+          <div class="callout-label">Atenção</div>
+          As credenciais abaixo são apenas para o primeiro acesso ou em ambiente de testes. Altere a senha do administrador imediatamente após a primeira configuração.
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Perfil</th><th>Usuário Padrão</th><th>Senha Padrão</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge badge-admin">Admin</span></td><td><code>admin</code></td><td><code>admin123</code></td><td>Alterar no primeiro acesso</td></tr>
+              <tr><td><span class="badge badge-pcp">PCP</span></td><td>Criado pelo admin</td><td>Definida pelo admin</td><td>—</td></tr>
+              <tr><td><span class="badge badge-operator">Operador</span></td><td>Criado pelo admin</td><td>Definida pelo admin</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Perfis de Usuário</h3>
+        <p>O sistema possui três perfis com permissões distintas:</p>
+
+        <div class="profile-card">
+          <div class="profile-icon admin">A</div>
+          <div>
+            <div class="profile-info-name"><span class="badge badge-admin">Admin</span> &nbsp;Administrador</div>
+            <div class="profile-info-desc">Acesso total ao sistema. Pode criar e gerenciar usuários, editar fichas técnicas, gerenciar cadastros base, realizar backup e acessar todos os relatórios. Responsável pela configuração inicial do sistema.</div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-icon pcp">P</div>
+          <div>
+            <div class="profile-info-name"><span class="badge badge-pcp">PCP</span> &nbsp;Planejamento e Controle da Produção</div>
+            <div class="profile-info-desc">Pode criar e editar fichas técnicas, visualizar histórico completo, exportar relatórios e acessar todos os cálculos. Não pode gerenciar usuários nem fazer backup.</div>
+          </div>
+        </div>
+        <div class="profile-card">
+          <div class="profile-icon operator">O</div>
+          <div>
+            <div class="profile-info-name"><span class="badge badge-operator">Operador</span> &nbsp;Operador de Espuladeira</div>
+            <div class="profile-info-desc">Acesso à tela de consulta e cálculo. Pode visualizar fichas técnicas (somente leitura) e consultar o histórico dos próprios cálculos. Não edita cadastros nem relatórios.</div>
+          </div>
+        </div>
+
+        <h3>Navegação Principal</h3>
+        <p>Após o login, o menu superior (ou drawer lateral no celular) apresenta as seções disponíveis para o seu perfil:</p>
+        <ul class="checklist">
+          <li><strong>Consulta</strong> — Tela principal de cálculo de pulsos</li>
+          <li><strong>Fichas</strong> — Cadastro e gestão de fichas técnicas</li>
+          <li><strong>Histórico</strong> — Registro de todos os cálculos realizados</li>
+          <li><strong>Cadastros</strong> — Tipos de fio e modelos de espula (admin/pcp)</li>
+          <li><strong>Usuários</strong> — Gestão de usuários (admin)</li>
+          <li><strong>Relatórios</strong> — Dashboard e exportações (admin/pcp)</li>
+          <li><strong>Backup</strong> — Exportar e importar dados (admin)</li>
+        </ul>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 3: TELA DE CONSULTA ═══════════════════ -->
+      <section class="doc-section" id="consulta">
+        <div class="section-eyebrow">Seção 03</div>
+        <h2 class="section-title">Tela de Consulta</h2>
+        <div class="red-line"></div>
+
+        <p>A tela de consulta é a funcionalidade central do sistema. É aqui que o operador ou técnico de PCP informa os parâmetros do lote e obtém os valores de pulso para configurar a máquina.</p>
+
+        <div class="screen-mock">
+<span class="dim">┌──────────────────────── CONSULTA ────────────────────────┐</span>
+<span class="dim">│</span>                                                          <span class="dim">│</span>
+<span class="dim">│</span>  <span class="hl">Ficha Técnica</span>                                          <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">[ Selecione a ficha... ▾ ]</span>                              <span class="dim">│</span>
+<span class="dim">│</span>                                                          <span class="dim">│</span>
+<span class="dim">│</span>  <span class="hl">Nº de Fusos</span>              <span class="hl">Comprimento (m)</span>               <span class="dim">│</span>
+<span class="dim">│</span>  <span class="dim">[ 1          ]</span>           <span class="dim">[ 100,00      ]</span>               <span class="dim">│</span>
+<span class="dim">│</span>                                                          <span class="dim">│</span>
+<span class="dim">│</span>              <span class="red">[ CALCULAR PULSOS ]</span>                        <span class="dim">│</span>
+<span class="dim">│</span>                                                          <span class="dim">│</span>
+<span class="dim">├──────────────── RESULTADO ────────────────────────────────┤</span>
+<span class="dim">│</span>  Pulsos/Metro  <span class="grn">12,450</span>   Pulsos Totais  <span class="red">1.245</span>            <span class="dim">│</span>
+<span class="dim">│</span>  Voltas/Fuso   <span class="grn">87,3</span>     Pulsos/Fuso    <span class="grn">1.245</span>            <span class="dim">│</span>
+<span class="dim">└──────────────────────────────────────────────────────────┘</span>
+        </div>
+
+        <h3>Passo a Passo do Cálculo</h3>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Selecione a Ficha Técnica</div>
+              <div class="step-desc">Clique no campo <strong>Ficha Técnica</strong> e escolha na lista a ficha correspondente ao tipo de fio e modelo de espula que será produzido naquele lote. A ficha contém todos os parâmetros físicos da espula e do fio já cadastrados.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Informe o Número de Fusos Ativos</div>
+              <div class="step-desc">Digite quantos fusos da espuladeira estarão em operação neste lote. Máquinas com fusos defeituosos ou em manutenção devem ser descontadas. O sistema ajusta automaticamente o cálculo por fuso.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Confirme o Comprimento de Fio</div>
+              <div class="step-desc">O campo <strong>Comprimento</strong> vem pré-preenchido com o valor padrão da ficha técnica selecionada. Você pode alterar este valor se o lote exigir um comprimento diferente do padrão.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Calcular Pulsos</div>
+              <div class="step-desc">O sistema processa as fórmulas de Arquimedes e Bhaskara e exibe os resultados imediatamente na seção de resultado abaixo do formulário.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <div class="step-title">Configure a Máquina</div>
+              <div class="step-desc">Use o valor <strong>Pulsos Totais</strong> destacado em vermelho para programar o contador da espuladeira. Os demais campos (pulsos/metro, voltas/fuso) são informativos para conferência.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">6</div>
+            <div class="step-body">
+              <div class="step-title">O cálculo é salvo automaticamente</div>
+              <div class="step-desc">Cada cálculo realizado é registrado automaticamente no Histórico com data, hora, usuário, ficha e resultados. Não é necessário salvar manualmente.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Busca de Fichas</h3>
+        <p>O campo de seleção de ficha técnica suporta busca por digitação. Comece a digitar o nome do fio, modelo da espula ou código da ficha e a lista se filtra em tempo real.</p>
+
+        <div class="callout warning">
+          <div class="callout-label">Dica de chão de fábrica</div>
+          Se a ficha desejada não aparecer na lista, ela pode não estar cadastrada ou pode estar inativa. Avise o técnico de PCP para verificar o cadastro antes de tentar calcular com uma ficha aproximada.
+        </div>
+
+        <h3>Cálculo com Fusos Parciais</h3>
+        <p>Quando nem todos os fusos da máquina estão em operação, informe apenas o número de fusos ativos. O sistema calcula corretamente para cada configuração. Exemplo:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Fusos Totais</th><th>Fusos Ativos</th><th>Comportamento</th></tr></thead>
+            <tbody>
+              <tr><td>12</td><td>12</td><td>Cálculo completo para lote cheio</td></tr>
+              <tr><td>12</td><td>8</td><td>Cálculo para lote parcial — valor por fuso idêntico</td></tr>
+              <tr><td>12</td><td>1</td><td>Válido para testes de calibração individual</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 4: RESULTADOS ═══════════════════ -->
+      <section class="doc-section" id="resultados">
+        <div class="section-eyebrow">Seção 04</div>
+        <h2 class="section-title">Entendendo os Resultados</h2>
+        <div class="red-line"></div>
+
+        <p>Após clicar em Calcular, o sistema exibe um painel de resultado com vários campos. Esta seção explica o significado exato de cada um.</p>
+
+        <div class="field-grid">
+          <div class="field-card">
+            <div class="field-name">Pulsos Totais</div>
+            <div class="field-desc">O valor principal. É o número que deve ser digitado no contador da espuladeira. Representa a soma dos pulsos de todos os fusos ativos no lote.</div>
+          </div>
+          <div class="field-card">
+            <div class="field-name">Pulsos por Metro</div>
+            <div class="field-desc">Quantos pulsos o contador registra por metro de fio bobinado. É uma constante da ficha técnica, determinada pela calibração da máquina com aquele fio.</div>
+          </div>
+          <div class="field-card">
+            <div class="field-name">Pulsos por Fuso</div>
+            <div class="field-desc">Pulsos totais divididos pelo número de fusos ativos. Útil para verificar se a configuração está correta em máquinas com contador individual por fuso.</div>
+          </div>
+          <div class="field-card">
+            <div class="field-name">Voltas por Fuso</div>
+            <div class="field-desc">Número estimado de voltas que o fio dará ao redor da espula. Calculado pela fórmula de Arquimedes com os diâmetros da espula e espessura do fio.</div>
+          </div>
+          <div class="field-card">
+            <div class="field-name">Comprimento Real</div>
+            <div class="field-desc">Comprimento de fio em metros que as bobinas terão com a configuração calculada. Pode diferir ligeiramente do valor solicitado devido ao arredondamento de pulsos inteiros.</div>
+          </div>
+          <div class="field-card">
+            <div class="field-name">Erro Estimado</div>
+            <div class="field-desc">Diferença percentual entre o comprimento solicitado e o comprimento real após arredondamento. Valores abaixo de 0,5% são aceitáveis para a maioria das aplicações.</div>
+          </div>
+        </div>
+
+        <h3>Por que o Comprimento Real Difere do Solicitado?</h3>
+        <p>O contador da espuladeira trabalha com pulsos inteiros — não é possível configurar 1.245,7 pulsos, apenas 1.245 ou 1.246. O sistema arredonda para o inteiro mais próximo e informa a diferença resultante no campo <strong>Erro Estimado</strong>.</p>
+
+        <div class="callout info">
+          <div class="callout-label">Tolerância aceitável</div>
+          Para a maioria dos usos têxteis, um erro de até 0,5% (50 cm em 100 metros) é perfeitamente aceitável. Se a aplicação exigir maior precisão, o técnico de PCP deve recalibrar o fator de pulso da ficha técnica.
+        </div>
+
+        <h3>Como Interpretar o Resultado no Chão de Fábrica</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Anote o Pulsos Totais</div>
+              <div class="step-desc">Este é o único valor que você precisará digitar na máquina. Os demais são de conferência.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Confira Voltas por Fuso visualmente</div>
+              <div class="step-desc">Se a espula ficar claramente cheia demais ou vazia, compare com o valor de Voltas por Fuso calculado. Uma discrepância grande indica que o modelo de espula ou o título do fio estão incorretos na ficha.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Verifique com amostra</div>
+              <div class="step-desc">Na primeira produção com uma ficha nova, meça o comprimento real de uma bobina com trena ou medidor de fio. Se o desvio for maior que 1%, comunique ao PCP para recalibração.</div>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 5: FICHAS TÉCNICAS ═══════════════════ -->
+      <section class="doc-section" id="fichas">
+        <div class="section-eyebrow">Seção 05</div>
+        <h2 class="section-title">Fichas Técnicas</h2>
+        <div class="red-line"></div>
+
+        <p>As fichas técnicas são o coração do sistema. Cada ficha representa uma combinação específica de tipo de fio e modelo de espula, com todos os parâmetros físicos necessários para o cálculo. Apenas usuários com perfil <span class="badge badge-pcp">PCP</span> ou <span class="badge badge-admin">Admin</span> podem criar e editar fichas.</p>
+
+        <h3>Campos de uma Ficha Técnica</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Descrição</th><th>Unidade</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Nome</strong></td><td>Identificação da ficha (ex: "Poliéster 50 — Espula P")</td><td>Texto</td></tr>
+              <tr><td><strong>Tipo de Fio</strong></td><td>Selecionado do cadastro de tipos de fio</td><td>—</td></tr>
+              <tr><td><strong>Modelo de Espula</strong></td><td>Selecionado do cadastro de espulas</td><td>—</td></tr>
+              <tr><td><strong>Comprimento Padrão</strong></td><td>Metragem alvo padrão para este lote</td><td>metros</td></tr>
+              <tr><td><strong>Fator de Pulso</strong></td><td>Pulsos por metro calibrado para este fio nesta máquina</td><td>pulsos/m</td></tr>
+              <tr><td><strong>Espessura do Fio</strong></td><td>Diâmetro físico do fio, derivado do título</td><td>mm</td></tr>
+              <tr><td><strong>Diâmetro Interno</strong></td><td>Diâmetro do núcleo (vazio) da espula</td><td>mm</td></tr>
+              <tr><td><strong>Diâmetro Externo</strong></td><td>Diâmetro máximo da espula quando cheia</td><td>mm</td></tr>
+              <tr><td><strong>Comprimento Útil</strong></td><td>Largura de bobinamento da espula</td><td>mm</td></tr>
+              <tr><td><strong>Observações</strong></td><td>Notas livres para o operador</td><td>Texto</td></tr>
+              <tr><td><strong>Ativa</strong></td><td>Se a ficha está disponível para consulta</td><td>Sim/Não</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Criando uma Nova Ficha</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Acesse o menu Fichas Técnicas</div>
+              <div class="step-desc">No menu principal, clique em <strong>Fichas</strong>. A lista de fichas cadastradas será exibida.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Nova Ficha</div>
+              <div class="step-desc">O botão <strong>+ Nova Ficha</strong> está no canto superior direito da tela. Um formulário em modal ou em nova página será exibido.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Preencha todos os campos obrigatórios</div>
+              <div class="step-desc">Campos marcados com <code>*</code> são obrigatórios. O sistema valida os valores em tempo real e alerta quando algum dado está fora do intervalo esperado.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Defina o Fator de Pulso</div>
+              <div class="step-desc">Este é o campo mais crítico. O fator de pulso é obtido por calibração: produza uma bobina em modo manual, meça o comprimento real e divida os pulsos registrados pelo comprimento medido.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Salvar</div>
+              <div class="step-desc">A ficha é salva e fica disponível imediatamente para uso na tela de consulta.</div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="callout warning">
+          <div class="callout-label">Atenção — Fator de Pulso</div>
+          O fator de pulso é específico para cada combinação de máquina + fio. Se o mesmo fio for bobinado em espuladeiras diferentes (com contadores de sensibilidades distintas), cada máquina pode precisar de um fator diferente. Considere criar fichas separadas por máquina quando necessário.
+        </div>
+
+        <h3>Editando uma Ficha Existente</h3>
+        <p>Na lista de fichas, clique no ícone de lápis (editar) ao lado da ficha desejada. O formulário de edição abrirá com os dados atuais pré-preenchidos. Faça as alterações e clique em Salvar.</p>
+
+        <div class="callout danger">
+          <div class="callout-label">Atenção — Impacto nos cálculos</div>
+          Alterar o fator de pulso ou as dimensões de uma ficha técnica impacta todos os cálculos futuros que a utilizarem. Os cálculos já salvos no histórico não são alterados — eles registram os parâmetros usados no momento do cálculo.
+        </div>
+
+        <h3>Desativando uma Ficha</h3>
+        <p>Em vez de excluir uma ficha, prefira desativá-la (toggle <strong>Ativa → Inativa</strong>). Fichas inativas não aparecem na tela de consulta mas continuam no histórico como referência. Para excluir permanentemente, clique no ícone de lixeira e confirme na caixa de diálogo.</p>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 6: HISTÓRICO ═══════════════════ -->
+      <section class="doc-section" id="historico">
+        <div class="section-eyebrow">Seção 06</div>
+        <h2 class="section-title">Histórico de Cálculos</h2>
+        <div class="red-line"></div>
+
+        <p>O histórico registra automaticamente cada cálculo realizado no sistema. Cada entrada contém data, hora, usuário responsável, ficha utilizada, parâmetros e resultados completos.</p>
+
+        <h3>Visualizando o Histórico</h3>
+        <p>Acesse <strong>Histórico</strong> no menu principal. A lista exibe os cálculos em ordem cronológica reversa (mais recentes primeiro). Cada linha mostra:</p>
+        <ul class="checklist">
+          <li>Data e hora do cálculo</li>
+          <li>Nome do usuário que realizou o cálculo</li>
+          <li>Nome da ficha técnica utilizada</li>
+          <li>Comprimento configurado (metros)</li>
+          <li>Número de fusos</li>
+          <li>Pulsos totais calculados</li>
+        </ul>
+
+        <h3>Filtrando e Buscando</h3>
+        <p>O histórico oferece os seguintes filtros:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Filtro</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Período</strong></td><td>Data inicial e data final</td></tr>
+              <tr><td><strong>Ficha</strong></td><td>Selecionar uma ficha específica</td></tr>
+              <tr><td><strong>Usuário</strong></td><td>Filtrar por quem calculou (admin/pcp veem todos; operador vê apenas os seus)</td></tr>
+              <tr><td><strong>Busca livre</strong></td><td>Pesquisa em nome de ficha e observações</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Reutilizando um Cálculo</h3>
+        <p>Ao clicar em um registro do histórico, você verá os detalhes completos. O botão <strong>Reutilizar</strong> pré-preenche a tela de consulta com os mesmos parâmetros (ficha, comprimento, fusos), permitindo refazer ou ajustar o cálculo rapidamente.</p>
+
+        <div class="callout info">
+          <div class="callout-label">Dica de produtividade</div>
+          Use o botão Reutilizar ao iniciar um turno com o mesmo lote do dia anterior. Você não precisará re-selecionar a ficha nem redigitar os parâmetros.
+        </div>
+
+        <h3>Limpando o Histórico</h3>
+        <p>Apenas o perfil <span class="badge badge-admin">Admin</span> pode limpar o histórico. Acesse <strong>Histórico → Gerenciar → Limpar histórico anterior a [data]</strong>. O sistema solicitará confirmação dupla antes de excluir permanentemente os registros antigos.</p>
+
+        <div class="callout danger">
+          <div class="callout-label">Irreversível</div>
+          A limpeza do histórico não pode ser desfeita. Antes de limpar, exporte o histórico para CSV ou faça um backup completo do sistema.
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 7: CADASTROS BASE ═══════════════════ -->
+      <section class="doc-section" id="cadastros">
+        <div class="section-eyebrow">Seção 07</div>
+        <h2 class="section-title">Cadastros Base</h2>
+        <div class="red-line"></div>
+
+        <p>Os cadastros base são as tabelas de referência que alimentam as fichas técnicas. Compreendem os <strong>Tipos de Fio</strong> e os <strong>Modelos de Espula</strong>. Acesso restrito a perfis <span class="badge badge-pcp">PCP</span> e <span class="badge badge-admin">Admin</span>.</p>
+
+        <h3>Tipos de Fio</h3>
+        <p>Cada tipo de fio cadastrado define as propriedades físicas e identificação do insumo:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Descrição</th><th>Exemplo</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Nome</strong></td><td>Identificação do fio</td><td>Poliéster 50/2</td></tr>
+              <tr><td><strong>Título (Nm / Ne / Tex / Dtex)</strong></td><td>Finura do fio na norma utilizada pela fábrica</td><td>Nm 50/2</td></tr>
+              <tr><td><strong>Espessura Calculada</strong></td><td>Diâmetro físico do fio em mm (calculado ou medido)</td><td>0,18 mm</td></tr>
+              <tr><td><strong>Material</strong></td><td>Composição (poliéster, nylon, algodão, viscose, etc.)</td><td>100% Poliéster</td></tr>
+              <tr><td><strong>Fornecedor</strong></td><td>Nome do fornecedor (opcional)</td><td>Coats / Corrente</td></tr>
+              <tr><td><strong>Cor padrão</strong></td><td>Cor de referência para identificação visual</td><td>Branco natural</td></tr>
+              <tr><td><strong>Observações</strong></td><td>Notas adicionais</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout info">
+          <div class="callout-label">Sobre a Espessura do Fio</div>
+          A espessura do fio é fundamental para o cálculo de Arquimedes. Se não houver medição física disponível, use a tabela de referência abaixo. Em caso de dúvida, prefira medir com paquímetro digital uma amostra real do fio.
+        </div>
+
+        <h4>Tabela de Referência — Espessura por Título</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Título (Nm)</th><th>Material</th><th>Espessura Aprox. (mm)</th></tr></thead>
+            <tbody>
+              <tr><td>Nm 20/2</td><td>Poliéster</td><td>0,28</td></tr>
+              <tr><td>Nm 30/2</td><td>Poliéster</td><td>0,23</td></tr>
+              <tr><td>Nm 40/2</td><td>Poliéster</td><td>0,20</td></tr>
+              <tr><td>Nm 50/2</td><td>Poliéster</td><td>0,18</td></tr>
+              <tr><td>Nm 60/2</td><td>Poliéster</td><td>0,16</td></tr>
+              <tr><td>Nm 80/2</td><td>Poliéster</td><td>0,14</td></tr>
+              <tr><td>Ne 20</td><td>Algodão</td><td>0,30</td></tr>
+              <tr><td>Ne 30</td><td>Algodão</td><td>0,24</td></tr>
+              <tr><td>Ne 40</td><td>Algodão</td><td>0,21</td></tr>
+              <tr><td>Dtex 167</td><td>Nylon</td><td>0,15</td></tr>
+              <tr><td>Dtex 78</td><td>Nylon</td><td>0,10</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Modelos de Espula</h3>
+        <p>Cada modelo de espula define as dimensões físicas da bobina:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Descrição</th><th>Medição</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Nome / Código</strong></td><td>Identificação do modelo</td><td>—</td></tr>
+              <tr><td><strong>Diâmetro Interno (Di)</strong></td><td>Diâmetro do furo central (núcleo) da espula</td><td>Paquímetro externo no núcleo</td></tr>
+              <tr><td><strong>Diâmetro Externo (De)</strong></td><td>Diâmetro máximo permitido (flanges)</td><td>Paquímetro externo nas flanges</td></tr>
+              <tr><td><strong>Comprimento Útil (L)</strong></td><td>Largura da área de bobinamento entre flanges</td><td>Paquímetro interno entre flanges</td></tr>
+              <tr><td><strong>Material</strong></td><td>Plástico, papel, metal etc.</td><td>—</td></tr>
+              <tr><td><strong>Aplicação</strong></td><td>Máquina de destino (costura, overlock, tecelagem…)</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warning">
+          <div class="callout-label">Medição cuidadosa</div>
+          Erros nas dimensões da espula provocam desvios proporcionais em todos os cálculos que usam esse modelo. Meça cada dimensão pelo menos 3 vezes e use a média. Use paquímetro calibrado (resolução 0,01 mm).
+        </div>
+
+        <h3>Gerenciando Cadastros</h3>
+        <p>As operações disponíveis em ambos os cadastros (fios e espulas) são:</p>
+        <ul class="checklist">
+          <li><strong>Novo</strong> — Cria um novo registro</li>
+          <li><strong>Editar</strong> — Altera um registro existente</li>
+          <li><strong>Ativar / Inativar</strong> — Controla a visibilidade nas fichas técnicas</li>
+          <li><strong>Excluir</strong> — Remove permanentemente (só possível se não houver fichas vinculadas)</li>
+        </ul>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 8: USUÁRIOS ═══════════════════ -->
+      <section class="doc-section" id="usuarios">
+        <div class="section-eyebrow">Seção 08</div>
+        <h2 class="section-title">Gerenciamento de Usuários</h2>
+        <div class="red-line"></div>
+
+        <p>O gerenciamento de usuários é exclusivo do perfil <span class="badge badge-admin">Admin</span>. Acesse pelo menu <strong>Usuários</strong>.</p>
+
+        <h3>Criando um Novo Usuário</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Clique em + Novo Usuário</div>
+              <div class="step-desc">O formulário de criação de usuário será exibido em um modal.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Preencha nome, login e senha</div>
+              <div class="step-desc">O login deve ser único no sistema. A senha deve ter no mínimo 6 caracteres. Recomenda-se usar o padrão <code>nome.sobrenome</code> para o login.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Selecione o Perfil</div>
+              <div class="step-desc">Escolha entre <span class="badge badge-admin">Admin</span>, <span class="badge badge-pcp">PCP</span> ou <span class="badge badge-operator">Operador</span> conforme a função do colaborador.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Criar Usuário</div>
+              <div class="step-desc">O usuário já poderá fazer login imediatamente.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Tabela de Permissões por Perfil</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionalidade</th>
+                <th><span class="badge badge-operator">Operador</span></th>
+                <th><span class="badge badge-pcp">PCP</span></th>
+                <th><span class="badge badge-admin">Admin</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Tela de Consulta / Cálculo</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Ver Histórico (próprio)</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Ver Histórico (todos)</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Criar/Editar Fichas Técnicas</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Gerenciar Tipos de Fio</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Gerenciar Modelos de Espula</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Exportar Relatórios</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Gerenciar Usuários</td><td>—</td><td>—</td><td>✓</td></tr>
+              <tr><td>Backup / Restauração</td><td>—</td><td>—</td><td>✓</td></tr>
+              <tr><td>Limpar Histórico</td><td>—</td><td>—</td><td>✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Editando e Inativando Usuários</h3>
+        <p>Na lista de usuários, cada linha possui botões de ação:</p>
+        <ul class="checklist">
+          <li><strong>Editar</strong> — Altera nome, perfil ou senha do usuário</li>
+          <li><strong>Inativar</strong> — Bloqueia o login sem excluir o usuário. O histórico é preservado.</li>
+          <li><strong>Reativar</strong> — Restaura o acesso de um usuário inativo</li>
+          <li><strong>Excluir</strong> — Remove permanentemente (somente se o usuário não tiver registros no histórico)</li>
+        </ul>
+
+        <div class="callout warning">
+          <div class="callout-label">Boas práticas de segurança</div>
+          Nunca compartilhe a senha do usuário <code>admin</code>. Crie um usuário Admin individual para cada administrador. Inative imediatamente os usuários de colaboradores desligados.
+        </div>
+
+        <h3>Alterando a Própria Senha</h3>
+        <p>Qualquer usuário pode alterar a própria senha. Clique no seu nome no canto superior direito da tela e selecione <strong>Alterar Senha</strong>. Informe a senha atual e a nova senha (mínimo 6 caracteres) e confirme.</p>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 9: RELATÓRIOS ═══════════════════ -->
+      <section class="doc-section" id="relatorios">
+        <div class="section-eyebrow">Seção 09</div>
+        <h2 class="section-title">Relatórios e Exportação</h2>
+        <div class="red-line"></div>
+
+        <p>O módulo de relatórios permite analisar o uso do sistema e exportar dados para outros sistemas ou para impressão. Disponível para perfis <span class="badge badge-pcp">PCP</span> e <span class="badge badge-admin">Admin</span>.</p>
+
+        <h3>Dashboard de Produção</h3>
+        <p>A tela inicial de Relatórios exibe um dashboard com:</p>
+        <ul class="checklist">
+          <li>Total de cálculos realizados no período selecionado</li>
+          <li>Fichas técnicas mais utilizadas (ranking)</li>
+          <li>Comprimento total de fio configurado (soma de todos os cálculos)</li>
+          <li>Distribuição de cálculos por usuário</li>
+          <li>Linha do tempo de atividade diária</li>
+        </ul>
+
+        <h3>Exportação CSV</h3>
+        <p>Exporta o histórico filtrado em formato CSV (valores separados por vírgula), compatível com Excel, LibreOffice Calc e qualquer software de planilha.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Aplique os filtros desejados</div>
+              <div class="step-desc">Use os filtros de período, ficha e usuário para delimitar o conjunto de dados a exportar.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Exportar CSV</div>
+              <div class="step-desc">O arquivo será baixado automaticamente com o nome <code>pulso_historico_AAAA-MM-DD.csv</code>.</div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="code-label">Exemplo de colunas no CSV</div>
+        <pre><code>data_hora,usuario,ficha,comprimento_m,fusos,pulsos_totais,pulsos_por_metro,voltas_por_fuso,erro_pct
+2026-03-15 08:32:11,joao.silva,Poliester 50 - Espula P,100,8,9960,99.6,87.3,0.04
+2026-03-15 09:14:55,joao.silva,Nylon 78 - Espula G,200,12,24840,124.2,102.7,0.02</code></pre>
+
+        <h3>Exportação PDF</h3>
+        <p>Gera um relatório formatado em PDF com cabeçalho Stickfran, tabela de dados, totalizadores e rodapé com data de geração. Ideal para arquivamento físico e envio por e-mail.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Aplique os filtros</div>
+              <div class="step-desc">Mesmo processo do CSV — defina o período e filtros desejados.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Exportar PDF</div>
+              <div class="step-desc">O sistema abrirá a prévia de impressão do navegador. Selecione "Salvar como PDF" na lista de impressoras ou imprima diretamente.</div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="callout info">
+          <div class="callout-label">Dica de impressão</div>
+          Para melhor resultado no PDF, defina orientação paisagem e margens mínimas no diálogo de impressão do navegador. O sistema já inclui estilos de impressão otimizados.
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 10: BACKUP ═══════════════════ -->
+      <section class="doc-section" id="backup">
+        <div class="section-eyebrow">Seção 10</div>
+        <h2 class="section-title">Backup</h2>
+        <div class="red-line"></div>
+
+        <p>O módulo de backup permite exportar e importar todos os dados do sistema em formato JSON. Exclusivo do perfil <span class="badge badge-admin">Admin</span>. Acesse em <strong>Backup</strong> no menu principal.</p>
+
+        <h3>O que é Incluído no Backup</h3>
+        <ul class="checklist">
+          <li>Todos os usuários (sem senhas — por segurança)</li>
+          <li>Todos os tipos de fio cadastrados</li>
+          <li>Todos os modelos de espula</li>
+          <li>Todas as fichas técnicas (ativas e inativas)</li>
+          <li>Todo o histórico de cálculos</li>
+          <li>Configurações gerais do sistema</li>
+        </ul>
+
+        <h3>Exportando o Backup</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Acesse Backup</div>
+              <div class="step-desc">No menu principal, clique em <strong>Backup</strong>.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Exportar Backup</div>
+              <div class="step-desc">O sistema gerará um arquivo JSON com o nome <code>backup_pulso_AAAA-MM-DD_HHMM.json</code> e iniciará o download automaticamente.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Guarde o arquivo em local seguro</div>
+              <div class="step-desc">Copie o arquivo para um pendrive ou pasta de rede protegida. Recomenda-se backup semanal.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Importando um Backup</h3>
+        <div class="callout danger">
+          <div class="callout-label">Atenção — Operação destrutiva</div>
+          A importação de backup substitui todos os dados atuais do sistema pelos dados do arquivo importado. Esta operação não pode ser desfeita. Faça um backup do estado atual antes de importar.
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Importar Backup</div>
+              <div class="step-desc">Na tela de backup, clique em <strong>Importar Backup</strong> e selecione o arquivo <code>.json</code> exportado anteriormente.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Validação automática</div>
+              <div class="step-desc">O sistema validará o arquivo antes de importar. Se o arquivo estiver corrompido ou incompatível, um erro será exibido e nenhum dado será alterado.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Confirme a importação</div>
+              <div class="step-desc">Uma caixa de diálogo pedirá confirmação dupla. Leia atentamente o aviso e confirme apenas se tiver certeza.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Recarregue o sistema</div>
+              <div class="step-desc">Após importação bem-sucedida, recarregue a página para que todos os dados sejam refletidos corretamente na interface.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Política de Backup Recomendada</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Frequência</th><th>Situação</th><th>Destino</th></tr></thead>
+            <tbody>
+              <tr><td>Semanal</td><td>Rotina normal de operação</td><td>Pasta de rede ou pendrive</td></tr>
+              <tr><td>Antes de atualizações</td><td>Antes de instalar nova versão do sistema</td><td>Dois destinos diferentes</td></tr>
+              <tr><td>Antes de importar</td><td>Antes de qualquer importação</td><td>Local seguro de recuperação</td></tr>
+              <tr><td>Mensal</td><td>Arquivo histórico de longo prazo</td><td>Nuvem ou servidor externo</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 11: PWA ═══════════════════ -->
+      <section class="doc-section" id="pwa">
+        <div class="section-eyebrow">Seção 11</div>
+        <h2 class="section-title">Instalação PWA</h2>
+        <div class="red-line"></div>
+
+        <p>O Gerenciador de Pulso é um PWA — <em>Progressive Web App</em>. Isso significa que ele pode ser instalado como aplicativo nativo no seu celular ou desktop, sem precisar de loja de aplicativos, e funcionar offline após a primeira carga.</p>
+
+        <h3>Instalando no Android (Chrome)</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Abra o sistema no Chrome</div>
+              <div class="step-desc">Acesse o endereço do sistema no Chrome para Android.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Toque no banner de instalação</div>
+              <div class="step-desc">O Chrome exibirá automaticamente um banner na parte inferior da tela com a mensagem <strong>"Adicionar Gerenciador de Pulso à tela inicial"</strong>. Toque em <strong>Instalar</strong>.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Alternativa: menu do Chrome</div>
+              <div class="step-desc">Se o banner não aparecer, toque nos três pontos (⋮) no canto superior direito e selecione <strong>Adicionar à tela inicial</strong>.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Confirme o nome e instale</div>
+              <div class="step-desc">Confirme o nome do atalho e toque em <strong>Adicionar</strong>. O ícone do app aparecerá na sua tela inicial.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Instalando no iPhone / iPad (Safari)</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Abra o sistema no Safari</div>
+              <div class="step-desc">No iPhone, use obrigatoriamente o Safari para instalar PWAs. Chrome e Firefox no iOS não suportam esta funcionalidade.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Toque no ícone de compartilhamento</div>
+              <div class="step-desc">Na barra inferior do Safari, toque no ícone de compartilhamento (quadrado com seta para cima).</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Selecione "Adicionar à Tela de Início"</div>
+              <div class="step-desc">Role a lista de opções e toque em <strong>Adicionar à Tela de Início</strong> (ícone de casa com +).</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Confirme</div>
+              <div class="step-desc">Toque em <strong>Adicionar</strong> no canto superior direito. O ícone aparecerá na tela inicial.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Instalando no Desktop (Windows / Mac / Linux)</h3>
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Abra o sistema no Chrome ou Edge</div>
+              <div class="step-desc">Ambos os navegadores suportam instalação de PWA no desktop.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Clique no ícone de instalação na barra de endereços</div>
+              <div class="step-desc">Um ícone de computador com seta de download aparecerá no lado direito da barra de endereços. Clique nele.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Clique em Instalar</div>
+              <div class="step-desc">O sistema abrirá em uma janela própria, sem as abas e menus do navegador, como um app nativo.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>Uso Offline</h3>
+        <p>Após a primeira carga com conexão, o Service Worker armazena todos os recursos do sistema no cache do dispositivo. Nas próximas vezes, o sistema funcionará sem internet para:</p>
+        <ul class="checklist">
+          <li>Realizar cálculos de pulso</li>
+          <li>Consultar fichas técnicas cadastradas</li>
+          <li>Visualizar histórico já carregado</li>
+          <li>Editar fichas e cadastros (sincroniza quando reconectar)</li>
+        </ul>
+
+        <div class="callout info">
+          <div class="callout-label">Sincronização ao reconectar</div>
+          Dados criados ou alterados offline são sincronizados automaticamente com o servidor assim que a conexão é restabelecida. Um indicador de sincronização aparece na interface quando há dados pendentes.
+        </div>
+      </section>
+
+      <!-- ═══════════════════ SEÇÃO 12: PROBLEMAS ═══════════════════ -->
+      <section class="doc-section" id="problemas">
+        <div class="section-eyebrow">Seção 12</div>
+        <h2 class="section-title">Resolução de Problemas</h2>
+        <div class="red-line"></div>
+
+        <p>Esta seção cobre os erros e situações problemáticas mais comuns encontradas no uso cotidiano do sistema.</p>
+
+        <h3>Erros de Login</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Mensagem</th><th>Causa</th><th>Solução</th></tr></thead>
+            <tbody>
+              <tr><td>"Usuário ou senha inválidos"</td><td>Credenciais incorretas</td><td>Verifique caps lock, tente novamente. Se persistir, peça ao admin para redefinir a senha.</td></tr>
+              <tr><td>"Usuário inativo"</td><td>Conta desativada pelo admin</td><td>Contate o administrador do sistema para reativação.</td></tr>
+              <tr><td>"Muitas tentativas"</td><td>Bloqueio por segurança (5 tentativas)</td><td>Aguarde 15 minutos ou peça ao admin para desbloquear.</td></tr>
+              <tr><td>Página não carrega</td><td>Servidor offline ou URL incorreta</td><td>Verifique a URL e a conexão de rede. Contate o TI.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Erros no Cálculo</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Situação</th><th>Causa Provável</th><th>Solução</th></tr></thead>
+            <tbody>
+              <tr><td>Resultado de pulsos = 0</td><td>Fator de pulso zerado na ficha</td><td>Edite a ficha técnica e verifique o campo Fator de Pulso.</td></tr>
+              <tr><td>Resultado absurdamente alto</td><td>Comprimento em centímetros em vez de metros</td><td>Confirme a unidade — o campo espera metros.</td></tr>
+              <tr><td>Erro estimado > 5%</td><td>Dimensões de espula ou fio imprecisas</td><td>Recalibrar o fator de pulso. Medir novamente as dimensões físicas.</td></tr>
+              <tr><td>"Ficha não encontrada"</td><td>Ficha foi inativada ou excluída</td><td>Verifique em Fichas Técnicas → Inativas. Reative se necessário.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Problemas de Sincronização Offline</h3>
+        <div class="callout warning">
+          <div class="callout-label">Símbolo de sincronização pendente</div>
+          Quando há dados offline não sincronizados, um ícone de nuvem com seta aparece no header. Não feche o sistema ou saia até que a sincronização conclua.
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">Verifique a conexão</div>
+              <div class="step-desc">Confirme que o dispositivo está conectado à rede da fábrica (WiFi ou cabo) e que consegue acessar outros recursos internos.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">Aguarde a sincronização automática</div>
+              <div class="step-desc">Ao reconectar, a sincronização ocorre automaticamente em até 30 segundos. Não force o recarregamento neste período.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">Sincronização manual</div>
+              <div class="step-desc">Se o ícone persistir, clique nele e selecione <strong>Sincronizar agora</strong>.</div>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">Em caso de conflito</div>
+              <div class="step-desc">Se houver conflito entre dados locais e do servidor (ex: mesma ficha editada nos dois lados), o sistema exibirá um diálogo de resolução. Escolha qual versão manter.</div>
+            </div>
+          </li>
+        </ol>
+
+        <h3>O Sistema Não Abre no Celular</h3>
+        <ul class="checklist">
+          <li>Verifique se está conectado na rede WiFi da fábrica</li>
+          <li>Tente acessar pelo endereço IP diretamente (ex: <code>192.168.1.10:3000</code>)</li>
+          <li>Limpe o cache do navegador: Configurações → Privacidade → Limpar dados de navegação</li>
+          <li>Se instalado como PWA, remova e reinstale o ícone da tela inicial</li>
+          <li>Contate o TI para verificar se o servidor está em execução</li>
+        </ul>
+
+        <h3>Dados Sumidos Após Reinstalar</h3>
+        <div class="callout danger">
+          <div class="callout-label">Importante</div>
+          O sistema armazena dados no servidor, não apenas no dispositivo. Se os dados sumiram após reinstalar o app, o problema é no servidor. Contate o administrador para verificar o banco de dados e restaurar um backup se necessário.
+        </div>
+
+        <h3>Contato com o Suporte</h3>
+        <p>Para problemas não cobertos neste manual, entre em contato com o suporte técnico da Stickfran:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Canal</th><th>Contato</th><th>Horário</th></tr></thead>
+            <tbody>
+              <tr><td>TI interno</td><td>Ramal 200</td><td>07h–17h (dias úteis)</td></tr>
+              <tr><td>E-mail</td><td><code>ti@stickfran.com.br</code></td><td>Resposta em até 24h</td></tr>
+              <tr><td>Supervisor de turno</td><td>Presencial</td><td>24h</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ GLOSSÁRIO ═══════════════════ -->
+      <section class="doc-section" id="glossario">
+        <div class="section-eyebrow">Apêndice</div>
+        <h2 class="section-title">Glossário Têxtil</h2>
+        <div class="red-line"></div>
+
+        <p>Termos técnicos usados no sistema e no chão de fábrica da Stickfran:</p>
+
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Espula</div>
+          <div class="glossary-def">Bobina pequena de fio que é inserida na máquina de costura (na canela) ou no tear. Tem dimensões padronizadas e precisa conter um comprimento exato de fio.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Espuladeira</div>
+          <div class="glossary-def">Máquina que bobina fio de cones grandes para espulas. Pode ter múltiplos fusos (posições) operando simultaneamente, cada um produzindo uma espula.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Fuso</div>
+          <div class="glossary-def">Cada posição individual de bobinamento de uma espuladeira. Uma máquina pode ter de 1 a 60 fusos ou mais, operando em paralelo.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Pulso</div>
+          <div class="glossary-def">Sinal elétrico gerado pelo sensor de rotação da espuladeira a cada incremento de fio bobinado. O contador acumula esses pulsos e para a máquina quando atinge o valor programado.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Título do Fio</div>
+          <div class="glossary-def">Medida da finura (espessura) do fio. Pode ser expresso em diferentes sistemas: <strong>Nm</strong> (métrico), <strong>Ne</strong> (inglês para algodão), <strong>Tex</strong> ou <strong>Dtex</strong> (sistema direto). Quanto maior o Nm, mais fino o fio.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Fator de Pulso</div>
+          <div class="glossary-def">Constante de calibração que relaciona pulsos registrados com metros de fio bobinado (pulsos por metro). É específico para cada combinação de máquina e tipo de fio.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Diâmetro Interno (Di)</div>
+          <div class="glossary-def">Diâmetro do núcleo vazio da espula, onde o fio começa a ser bobinado. É o raio inicial da espiral de Arquimedes.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Diâmetro Externo (De)</div>
+          <div class="glossary-def">Diâmetro máximo da espula quando completamente cheia. Limita o número máximo de camadas de fio.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Comprimento Útil (L)</div>
+          <div class="glossary-def">Largura da zona de bobinamento da espula, entre as flanges laterais. Determina quantas fileiras de fio cabem lado a lado.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Cone</div>
+          <div class="glossary-def">Bobina grande de fio (geralmente 2–5 kg) que alimenta a espuladeira. O cone fica parado em suporte enquanto a espuladeira puxa o fio e o rebobina em espulas.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Canela</div>
+          <div class="glossary-def">Parte interna da máquina de costura onde a espula é inserida. Fica na "cápsula" abaixo do prato da máquina.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> PCP</div>
+          <div class="glossary-def">Planejamento e Controle da Produção. Setor responsável por programar a produção, definir lotes e garantir o abastecimento de insumos na linha de produção.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Espiral de Arquimedes</div>
+          <div class="glossary-def">Curva matemática onde cada volta aumenta o raio em uma quantidade constante — exatamente como o fio se acumula em camadas sobre a espula. Base do cálculo de voltas do sistema.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Bhaskara</div>
+          <div class="glossary-def">Fórmula para resolver equações do segundo grau (ax² + bx + c = 0). Usada para calcular o número de voltas a partir do comprimento de fio desejado, invertendo a fórmula de Arquimedes.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> PWA</div>
+          <div class="glossary-def">Progressive Web App. Tecnologia que permite que um site funcione como aplicativo nativo, com ícone na tela inicial, uso offline e atualizações automáticas.</div>
+        </div>
+        <div class="glossary-entry">
+          <div class="glossary-term"><span style="color:var(--red)">◆</span> Service Worker</div>
+          <div class="glossary-def">Componente de software que fica em execução em segundo plano no dispositivo, gerenciando o cache offline e a sincronização de dados do PWA.</div>
+        </div>
+
+      </section>
+
+      <!-- FOOTER -->
+      <footer id="doc-footer">
+        Gerenciador de Pulso Espuladeira · Versão 8.0 · Stickfran Indústria &nbsp;·&nbsp; Março 2026<br>
+        <span style="color:var(--white3);font-size:11px">Documentação confidencial — uso interno</span>
+      </footer>
+
+    </div><!-- /content-inner -->
+  </main>
+
+</div><!-- /layout -->
+
+<script>
+  // ── IntersectionObserver for TOC active highlight ──
+  const sections = document.querySelectorAll('.doc-section[id]');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + entry.target.id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, {
+    rootMargin: '-' + (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) + 32) + 'px 0px -60% 0px',
+    threshold: 0
+  });
+
+  sections.forEach(s => observer.observe(s));
+
+  // ── Close sidebar on mobile link click ──
+  tocLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 610) {
+        document.getElementById('sidebar').classList.remove('open');
+      }
+    });
+  });
+
+  // ── Close sidebar when clicking outside on mobile ──
+  document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    if (window.innerWidth <= 610 && sidebar.classList.contains('open')) {
+      if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
+    }
+  });
+</script>
+</body>
+</html>
