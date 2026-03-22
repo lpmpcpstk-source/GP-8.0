@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Gerenciador de Pulso v8.0 — Sistema de controle de produção têxtil com cálculos Arquimedes e Bhaskara. Stickfran Indústria." />
+  <title>Gerenciador de Pulso v8.0 — Stickfran Indústria</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       VARIÁVEIS CSS
+    ============================================================ */
+    :root {
+      --color-base:        #080808;
+      --color-surface:     #0f0f0f;
+      --color-surface-2:   #161616;
+      --color-accent:      #E8192C;
+      --color-accent-dim:  rgba(232, 25, 44, 0.15);
+      --color-accent-glow: rgba(232, 25, 44, 0.35);
+      --color-text:        #F5F5F5;
+      --color-text-muted:  rgba(245, 245, 245, 0.55);
+      --color-text-faint:  rgba(245, 245, 245, 0.25);
+      --color-border:      rgba(232, 25, 44, 0.2);
+      --color-border-dim:  rgba(245, 245, 245, 0.07);
+      --color-sep:         rgba(232, 25, 44, 0.3);
+
+      --font-display:  'Bebas Neue', sans-serif;
+      --font-ui:       'Barlow Condensed', sans-serif;
+      --font-body:     'Barlow', sans-serif;
+      --font-mono:     'Share Tech Mono', monospace;
+
+      /* Fibonacci spacing: 1,2,3,5,8,13,21,34,55,89 */
+      --sp-1:   1px;
+      --sp-2:   2px;
+      --sp-3:   3px;
+      --sp-5:   5px;
+      --sp-8:   8px;
+      --sp-13:  13px;
+      --sp-21:  21px;
+      --sp-34:  34px;
+      --sp-55:  55px;
+      --sp-89:  89px;
+
+      --radius-sm:  4px;
+      --radius-md:  8px;
+      --radius-lg:  13px;
+
+      --glass-bg:     rgba(255, 255, 255, 0.04);
+      --glass-blur:   blur(20px);
+      --glass-border: 1px solid rgba(245, 245, 245, 0.07);
+
+      --nav-h: 64px;
+      --max-w: 1200px;
+
+      --transition-fast:   150ms ease;
+      --transition-base:   280ms ease;
+      --transition-slow:   500ms ease;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--color-base);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    ul, ol {
+      list-style: none;
+    }
+
+    img, svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: none;
+      font: inherit;
+    }
+
+    /* ============================================================
+       GLASSMORPHISM CLASSES
+    ============================================================ */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+    }
+
+    .glass-accent {
+      background: rgba(232, 25, 44, 0.06);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border);
+    }
+
+    /* ============================================================
+       CONTAINER
+    ============================================================ */
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      margin-inline: auto;
+      padding-inline: var(--sp-21);
+    }
+
+    /* ============================================================
+       KEYFRAME ANIMATIONS
+    ============================================================ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(34px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 21px var(--color-accent-glow); }
+      50%       { box-shadow: 0 0 55px var(--color-accent-glow), 0 0 89px rgba(232,25,44,0.15); }
+    }
+
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateY(0) rotate(45deg); }
+      50%       { transform: translateY(8px) rotate(45deg); }
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: scale(1) translate(0, 0); }
+      33%       { transform: scale(1.05) translate(13px, -8px); }
+      66%       { transform: scale(0.97) translate(-8px, 13px); }
+    }
+
+    /* Reveal on scroll */
+    .reveal {
+      opacity: 0;
+      transform: translateY(34px);
+      transition: opacity 600ms ease, transform 600ms ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 100ms; }
+    .reveal-delay-2 { transition-delay: 220ms; }
+    .reveal-delay-3 { transition-delay: 360ms; }
+    .reveal-delay-4 { transition-delay: 500ms; }
+
+    /* ============================================================
+       NAV FIXO
+    ============================================================ */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 900;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      transition: background var(--transition-base), backdrop-filter var(--transition-base);
+    }
+
+    .nav.scrolled {
+      background: rgba(8, 8, 8, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--color-border-dim);
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .nav__logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.05em;
+      color: var(--color-text);
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+
+    .nav__logo-pipe {
+      color: var(--color-text-faint);
+      margin-inline: 2px;
+    }
+
+    .nav__logo-accent {
+      color: var(--color-accent);
+    }
+
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-34);
+    }
+
+    .nav__link {
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      transition: color var(--transition-fast);
+      position: relative;
+    }
+
+    .nav__link::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background: var(--color-accent);
+      transition: width var(--transition-base);
+    }
+
+    .nav__link:hover {
+      color: var(--color-text);
+    }
+
+    .nav__link:hover::after {
+      width: 100%;
+    }
+
+    .nav__cta {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: var(--color-accent);
+      padding: var(--sp-8) var(--sp-21);
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast), box-shadow var(--transition-base);
+    }
+
+    .nav__cta:hover {
+      background: #c9162a;
+      box-shadow: 0 0 21px var(--color-accent-glow);
+    }
+
+    .nav__hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: var(--sp-8);
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .nav__hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--color-text);
+      border-radius: 2px;
+      transition: transform var(--transition-base), opacity var(--transition-base);
+    }
+
+    /* Mobile nav overlay */
+    .nav__mobile {
+      display: none;
+      position: fixed;
+      inset: 0;
+      top: var(--nav-h);
+      background: rgba(8, 8, 8, 0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 800;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-34);
+      padding: var(--sp-55);
+    }
+
+    .nav__mobile.open {
+      display: flex;
+    }
+
+    .nav__mobile .nav__link {
+      font-size: 24px;
+      letter-spacing: 0.12em;
+    }
+
+    /* ============================================================
+       BUTTON STYLES
+    ============================================================ */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-8);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: var(--color-accent);
+      padding: var(--sp-13) var(--sp-34);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-accent);
+      transition: background var(--transition-fast), box-shadow var(--transition-base), transform var(--transition-fast);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      background: #c9162a;
+      box-shadow: 0 0 34px var(--color-accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-8);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text);
+      background: transparent;
+      padding: var(--sp-13) var(--sp-34);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(245, 245, 245, 0.25);
+      transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(245, 245, 245, 0.6);
+      background: rgba(245, 245, 245, 0.05);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================================
+       SEPARATOR
+    ============================================================ */
+    .sep {
+      height: 1px;
+      background: var(--color-sep);
+      opacity: 0.3;
+      width: 100%;
+    }
+
+    /* ============================================================
+       SECTION BASE
+    ============================================================ */
+    section {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-8);
+    }
+
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 21px;
+      height: 1px;
+      background: var(--color-accent);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: 0.02em;
+      color: var(--color-text);
+    }
+
+    .section-title em {
+      font-style: normal;
+      color: var(--color-accent);
+    }
+
+    .section-desc {
+      font-family: var(--font-body);
+      font-size: 16px;
+      color: var(--color-text-muted);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ============================================================
+       HERO STYLES
+    ============================================================ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: var(--nav-h);
+      overflow: hidden;
+      background: var(--color-base);
+    }
+
+    /* Grade sutil de linhas vermelhas finas */
+    .hero__grid {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(232,25,44,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,25,44,0.03) 1px, transparent 1px);
+      background-size: 55px 55px;
+      z-index: 0;
+    }
+
+    /* Orbs de glow vermelho */
+    .hero__orb {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(89px);
+      z-index: 0;
+    }
+
+    .hero__orb--tl {
+      top: -89px;
+      left: -89px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(232,25,44,0.2) 0%, transparent 70%);
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+
+    .hero__orb--br {
+      bottom: -55px;
+      right: -55px;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(232,25,44,0.15) 0%, transparent 70%);
+      animation: orbFloat 15s ease-in-out infinite reverse;
+    }
+
+    .hero__orb--center {
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(232,25,44,0.05) 0%, transparent 65%);
+      animation: orbFloat 18s ease-in-out infinite;
+    }
+
+    .hero__content {
+      position: relative;
+      z-index: 1;
+      padding-block: var(--sp-89);
+    }
+
+    .hero__eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      margin-bottom: var(--sp-21);
+      animation: fadeUp 600ms ease 200ms both;
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(55px, 10vw, 89px);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      color: var(--color-text);
+      margin-bottom: var(--sp-21);
+      animation: fadeUp 700ms ease 300ms both;
+    }
+
+    .hero__title em {
+      font-style: normal;
+      color: var(--color-accent);
+    }
+
+    .hero__version {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--color-text-faint);
+      letter-spacing: 0.15em;
+      margin-bottom: var(--sp-21);
+      animation: fadeUp 700ms ease 360ms both;
+    }
+
+    .hero__tagline {
+      font-family: var(--font-ui);
+      font-size: clamp(16px, 2.5vw, 22px);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      max-width: 540px;
+      line-height: 1.5;
+      margin-bottom: var(--sp-34);
+      animation: fadeUp 700ms ease 450ms both;
+    }
+
+    .hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-13);
+      margin-bottom: var(--sp-55);
+      animation: fadeUp 700ms ease 550ms both;
+    }
+
+    .hero__stats {
+      display: flex;
+      gap: var(--sp-34);
+      flex-wrap: wrap;
+      animation: fadeUp 700ms ease 650ms both;
+    }
+
+    .hero__stat {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+
+    .hero__stat-value {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      color: var(--color-accent);
+      line-height: 1;
+    }
+
+    .hero__stat-label {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .hero__stat-divider {
+      width: 1px;
+      background: var(--color-border-dim);
+      align-self: stretch;
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+      position: absolute;
+      bottom: var(--sp-34);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sp-8);
+      z-index: 1;
+      animation: fadeIn 1s ease 1.2s both;
+    }
+
+    .scroll-indicator__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text-faint);
+    }
+
+    .scroll-indicator__arrow {
+      width: 20px;
+      height: 20px;
+      border-right: 1px solid rgba(245,245,245,0.3);
+      border-bottom: 1px solid rgba(245,245,245,0.3);
+      transform: rotate(45deg);
+      animation: scrollBounce 2s ease-in-out infinite;
+    }
+
+    /* ============================================================
+       PROBLEMA STYLES
+    ============================================================ */
+    .problema {
+      padding-block: var(--sp-89);
+      background: var(--color-surface);
+    }
+
+    .problema__header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-13);
+      margin-bottom: var(--sp-55);
+    }
+
+    .problema__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-21);
+      margin-bottom: var(--sp-34);
+    }
+
+    .pain-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-34);
+      transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base);
+    }
+
+    .pain-card:hover {
+      border-color: var(--color-border);
+      background: rgba(232, 25, 44, 0.04);
+      transform: translateY(-3px);
+    }
+
+    .pain-card__number {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-accent);
+      margin-bottom: var(--sp-8);
+    }
+
+    .pain-card__title {
+      font-family: var(--font-ui);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      margin-bottom: var(--sp-13);
+    }
+
+    .pain-card__desc {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+    }
+
+    .pain-card__bullets {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-8);
+      margin-top: var(--sp-13);
+    }
+
+    .pain-card__bullet {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-8);
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    .pain-card__bullet::before {
+      content: '—';
+      color: var(--color-accent);
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Impact card */
+    .impact-card {
+      background: linear-gradient(135deg, rgba(232,25,44,0.08) 0%, rgba(232,25,44,0.02) 100%);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-34) var(--sp-55);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-34);
+      flex-wrap: wrap;
+    }
+
+    .impact-card__metric {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-5);
+    }
+
+    .impact-card__value {
+      font-family: var(--font-mono);
+      font-size: 55px;
+      color: var(--color-accent);
+      line-height: 1;
+    }
+
+    .impact-card__label {
+      font-family: var(--font-ui);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .impact-card__text {
+      flex: 1;
+      max-width: 480px;
+    }
+
+    .impact-card__text h3 {
+      font-family: var(--font-ui);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--color-text);
+      margin-bottom: var(--sp-8);
+    }
+
+    .impact-card__text p {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+    }
+
+    /* ============================================================
+       SOLUÇÃO STYLES
+    ============================================================ */
+    .solucao {
+      padding-block: var(--sp-89);
+      background: var(--color-base);
+    }
+
+    .solucao__header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-13);
+      margin-bottom: var(--sp-55);
+      max-width: 640px;
+    }
+
+    .solucao__main-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-21);
+      margin-bottom: var(--sp-55);
+    }
+
+    .feature-card {
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-34);
+      transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .feature-card:hover {
+      border-color: var(--color-border);
+      box-shadow: 0 8px 34px rgba(232,25,44,0.08);
+      transform: translateY(-5px);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-card__badge {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      padding: 3px var(--sp-8);
+      margin-bottom: var(--sp-21);
+    }
+
+    .feature-card__icon-wrap {
+      width: 48px;
+      height: 48px;
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--sp-21);
+      color: var(--color-accent);
+    }
+
+    .feature-card__title {
+      font-family: var(--font-ui);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--color-text);
+      margin-bottom: var(--sp-13);
+    }
+
+    .feature-card__desc {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+    }
+
+    .feature-card__formula {
+      margin-top: var(--sp-21);
+      padding: var(--sp-13);
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--color-accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-accent);
+      letter-spacing: 0.05em;
+    }
+
+    /* Benefits secundários */
+    .solucao__benefits {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-21);
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-13);
+      padding: var(--sp-21);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-base);
+    }
+
+    .benefit-item:hover {
+      border-color: var(--color-border);
+    }
+
+    .benefit-item__icon {
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      color: var(--color-accent);
+      margin-top: 2px;
+    }
+
+    .benefit-item__content h4 {
+      font-family: var(--font-ui);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--color-text);
+      margin-bottom: var(--sp-5);
+    }
+
+    .benefit-item__content p {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       BENEFÍCIOS + PODCAST STYLES
+    ============================================================ */
+    .beneficios {
+      padding-block: var(--sp-89);
+      background: var(--color-surface);
+    }
+
+    .beneficios__header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-13);
+      margin-bottom: var(--sp-55);
+    }
+
+    .beneficios__layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-55);
+      align-items: start;
+    }
+
+    /* KPIs */
+    .kpis {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-21);
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-13);
+    }
+
+    .kpi-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-md);
+      padding: var(--sp-21);
+      text-align: center;
+      transition: border-color var(--transition-base), background var(--transition-base);
+    }
+
+    .kpi-card:hover {
+      border-color: var(--color-border);
+      background: rgba(232,25,44,0.04);
+    }
+
+    .kpi-card__value {
+      font-family: var(--font-mono);
+      font-size: 34px;
+      color: var(--color-accent);
+      line-height: 1;
+      margin-bottom: var(--sp-5);
+    }
+
+    .kpi-card__label {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .kpi-desc {
+      background: rgba(232,25,44,0.04);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--sp-21);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+    }
+
+    /* YouTube CTA */
+    .youtube-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-8);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--color-text);
+      background: rgba(255, 0, 0, 0.12);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      padding: var(--sp-8) var(--sp-21);
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-base), border-color var(--transition-base), transform var(--transition-fast);
+      margin-top: var(--sp-21);
+      text-decoration: none;
+    }
+
+    .youtube-cta:hover {
+      background: rgba(255, 0, 0, 0.22);
+      border-color: rgba(255, 0, 0, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .youtube-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ============================================================
+       PODCAST PLAYER STYLES
+    ============================================================ */
+    .podcast-panel {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-34);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-21);
+    }
+
+    .podcast-panel__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+    }
+
+    .podcast-panel__title {
+      font-family: var(--font-ui);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--color-text);
+      line-height: 1.4;
+    }
+
+    .podcast-panel__subtitle {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    .podcast-waveform {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      overflow: hidden;
+    }
+
+    .podcast-waveform__bar {
+      flex: 1;
+      background: rgba(232,25,44,0.25);
+      border-radius: 2px;
+      transition: background var(--transition-fast);
+    }
+
+    .podcast-waveform__bar.active {
+      background: var(--color-accent);
+    }
+
+    .podcast-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-13);
+    }
+
+    .podcast-btn-play {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      flex-shrink: 0;
+      background: var(--color-accent);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background var(--transition-fast), box-shadow var(--transition-base), transform var(--transition-fast);
+      color: #fff;
+    }
+
+    .podcast-btn-play:hover {
+      background: #c9162a;
+      box-shadow: 0 0 21px var(--color-accent-glow);
+      transform: scale(1.06);
+    }
+
+    .podcast-btn-play:active {
+      transform: scale(0.97);
+    }
+
+    .podcast-btn-play svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
+    }
+
+    .podcast-progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-5);
+    }
+
+    .podcast-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(245,245,245,0.1);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .podcast-progress-fill {
+      height: 100%;
+      background: var(--color-accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s linear;
+      pointer-events: none;
+      position: relative;
+    }
+
+    .podcast-progress-fill::after {
+      content: '';
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--color-accent-glow);
+    }
+
+    .podcast-time {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .podcast-time span {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ============================================================
+       CTA FINAL STYLES
+    ============================================================ */
+    .cta-final {
+      padding-block: var(--sp-89);
+      background: var(--color-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-final::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 50%, rgba(232,25,44,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-final__panel {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--color-border-dim);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-55);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--sp-34);
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-final__panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    }
+
+    .cta-final__eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+    }
+
+    .cta-final__title {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1;
+      color: var(--color-text);
+    }
+
+    .cta-final__title em {
+      font-style: normal;
+      color: var(--color-accent);
+    }
+
+    .cta-final__desc {
+      font-family: var(--font-body);
+      font-size: 16px;
+      color: var(--color-text-muted);
+      max-width: 480px;
+      line-height: 1.7;
+    }
+
+    .cta-final__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-13);
+      justify-content: center;
+    }
+
+    /* ============================================================
+       FOOTER STYLES
+    ============================================================ */
+    .footer {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-dim);
+      padding-block: var(--sp-55);
+    }
+
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: var(--sp-55);
+      margin-bottom: var(--sp-34);
+    }
+
+    .footer__brand-name {
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--color-text);
+      letter-spacing: 0.04em;
+      margin-bottom: var(--sp-8);
+    }
+
+    .footer__brand-name span {
+      color: var(--color-accent);
+    }
+
+    .footer__brand-desc {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+      max-width: 280px;
+      margin-bottom: var(--sp-21);
+    }
+
+    .footer__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-5);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--color-accent);
+      background: var(--color-accent-dim);
+      border: 1px solid var(--color-border);
+      border-radius: 2px;
+      padding: 3px var(--sp-8);
+    }
+
+    .footer__col-title {
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--color-text-faint);
+      margin-bottom: var(--sp-21);
+    }
+
+    .footer__links {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-13);
+    }
+
+    .footer__link {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--color-text-muted);
+      transition: color var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-5);
+    }
+
+    .footer__link::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      background: var(--color-accent);
+      border-radius: 50%;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+
+    .footer__link:hover {
+      color: var(--color-text);
+    }
+
+    .footer__bottom {
+      padding-top: var(--sp-21);
+      border-top: 1px solid var(--color-border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--sp-13);
+    }
+
+    .footer__copy {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--color-text-faint);
+    }
+
+    .footer__copy span {
+      color: var(--color-accent);
+    }
+
+    .footer__version {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text-faint);
+      letter-spacing: 0.1em;
+    }
+
+    /* ============================================================
+       RESPONSIVE OVERRIDES
+       Breakpoints: 377px · 610px · 987px
+    ============================================================ */
+
+    /* Até 376px — celulares menores */
+    @media (max-width: 376px) {
+      .container { padding-inline: var(--sp-13); }
+      .hero__title { font-size: 48px; }
+      .hero__actions { flex-direction: column; }
+      .hero__stats { flex-direction: column; gap: var(--sp-13); }
+      .hero__stat-divider { display: none; }
+      .btn-primary, .btn-ghost { width: 100%; justify-content: center; }
+    }
+
+    /* Até 610px — mobile padrão */
+    @media (max-width: 610px) {
+      .nav__links,
+      .nav__cta { display: none; }
+      .nav__hamburger { display: flex; }
+
+      .hero__title { font-size: 55px; }
+
+      .problema__grid { grid-template-columns: 1fr; }
+      .impact-card { flex-direction: column; text-align: center; padding: var(--sp-34); }
+      .impact-card__value { font-size: 42px; }
+
+      .solucao__main-grid { grid-template-columns: 1fr; }
+      .solucao__benefits { grid-template-columns: 1fr; }
+
+      .beneficios__layout { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+
+      .cta-final__panel { padding: var(--sp-34) var(--sp-21); }
+      .cta-final__actions { flex-direction: column; align-items: stretch; }
+      .cta-final__actions .btn-primary,
+      .cta-final__actions .btn-ghost { justify-content: center; }
+
+      .footer__grid { grid-template-columns: 1fr; gap: var(--sp-34); }
+      .footer__bottom { flex-direction: column; text-align: center; }
+    }
+
+    /* 611px — 986px — tablet */
+    @media (min-width: 611px) and (max-width: 986px) {
+      .nav__links,
+      .nav__cta { display: none; }
+      .nav__hamburger { display: flex; }
+
+      .problema__grid { grid-template-columns: 1fr 1fr; }
+      .solucao__main-grid { grid-template-columns: 1fr 1fr; }
+      .solucao__benefits { grid-template-columns: 1fr 1fr; }
+      .beneficios__layout { grid-template-columns: 1fr; }
+      .footer__grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* 987px+ — desktop */
+    @media (min-width: 987px) {
+      .nav__hamburger { display: none; }
+      .nav__links { display: flex; }
+      .nav__cta { display: inline-flex; }
+    }
+
+    /* ============================================================
+       UTILITY
+    ============================================================ */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    .mt-5  { margin-top: var(--sp-5); }
+    .mt-8  { margin-top: var(--sp-8); }
+    .mt-13 { margin-top: var(--sp-13); }
+    .mt-21 { margin-top: var(--sp-21); }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       NAV FIXO
+  ============================================================ -->
+  <header role="banner">
+    <nav class="nav" id="mainNav" aria-label="Navegação principal">
+      <div class="container">
+        <div class="nav__inner">
+
+          <a href="index.html" class="nav__logo" aria-label="Stickfran — página inicial">
+            STICK<span class="nav__logo-pipe">|</span><span class="nav__logo-accent">FRAN</span>
+          </a>
+
+          <ul class="nav__links" role="list">
+            <li><a href="docs/manual.pdf" class="nav__link" target="_blank" rel="noopener">Manual</a></li>
+            <li><a href="mvp.html" class="nav__link">MVP</a></li>
+            <li><a href="#" class="nav__link" target="_blank" rel="noopener" aria-label="Canal YouTube Stickfran (abre em nova aba)">YouTube</a></li>
+            <li><a href="index.html" class="nav__link">Entrar</a></li>
+          </ul>
+
+          <a href="index.html" class="nav__cta" aria-label="Acessar o sistema">
+            Acessar Sistema
+          </a>
+
+          <button
+            class="nav__hamburger"
+            id="hamburgerBtn"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="mobileNav"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile nav -->
+    <div class="nav__mobile" id="mobileNav" role="navigation" aria-label="Menu móvel">
+      <a href="docs/manual.pdf" class="nav__link" target="_blank" rel="noopener">Manual</a>
+      <a href="mvp.html" class="nav__link">MVP</a>
+      <a href="#" class="nav__link" target="_blank" rel="noopener">YouTube</a>
+      <a href="index.html" class="nav__link">Entrar</a>
+      <a href="index.html" class="btn-primary mt-21" style="width:100%;justify-content:center;">Acessar Sistema</a>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ============================================================
+         SEÇÃO 1 — HERO
+    ============================================================ -->
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+
+      <div class="hero__grid" aria-hidden="true"></div>
+      <div class="hero__orb hero__orb--tl" aria-hidden="true"></div>
+      <div class="hero__orb hero__orb--br" aria-hidden="true"></div>
+      <div class="hero__orb hero__orb--center" aria-hidden="true"></div>
+
+      <div class="container">
+        <div class="hero__content">
+
+          <p class="hero__eyebrow" aria-hidden="true">Stickfran Indústria &middot; Produção Têxtil</p>
+
+          <h1 class="hero__title" id="heroTitle">
+            GERENCIADOR<br />
+            DE <em>PULSO</em>
+          </h1>
+
+          <p class="hero__version" aria-label="Versão 8.0 Espuladeira">v8.0 &mdash; Espuladeira</p>
+
+          <p class="hero__tagline">
+            Precisão matemática na ponta do fio. Calcule lotes,
+            gerencie perfis e rastreie cada metro de produção
+            com rigor de engenharia.
+          </p>
+
+          <div class="hero__actions">
+            <a href="index.html" class="btn-primary" aria-label="Acessar o sistema Gerenciador de Pulso">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+              </svg>
+              Acessar Sistema
+            </a>
+            <a href="docs/manual.pdf" class="btn-ghost" target="_blank" rel="noopener" aria-label="Ler o manual técnico em PDF (abre em nova aba)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+              </svg>
+              Ver Manual
+            </a>
+          </div>
+
+          <div class="hero__stats" role="list" aria-label="Indicadores do sistema">
+            <div class="hero__stat" role="listitem">
+              <span class="hero__stat-value" aria-label="32 fusos suportados">32</span>
+              <span class="hero__stat-label">Fusos</span>
+            </div>
+            <div class="hero__stat-divider" aria-hidden="true"></div>
+            <div class="hero__stat" role="listitem">
+              <span class="hero__stat-value" aria-label="3 perfis de usuário">3</span>
+              <span class="hero__stat-label">Perfis</span>
+            </div>
+            <div class="hero__stat-divider" aria-hidden="true"></div>
+            <div class="hero__stat" role="listitem">
+              <span class="hero__stat-value" aria-label="100% baseado na web">100%</span>
+              <span class="hero__stat-label">Web</span>
+            </div>
+            <div class="hero__stat-divider" aria-hidden="true"></div>
+            <div class="hero__stat" role="listitem">
+              <span class="hero__stat-value" aria-label="zero instalação necessária">0</span>
+              <span class="hero__stat-label">Instalação</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="scroll-indicator" aria-hidden="true">
+        <span class="scroll-indicator__label">Explorar</span>
+        <div class="scroll-indicator__arrow"></div>
+      </div>
+
+    </section>
+
+    <div class="sep" role="separator" aria-hidden="true"></div>
+
+    <!-- ============================================================
+         SEÇÃO 2 — PROBLEMA
+    ============================================================ -->
+    <section class="problema" id="problema" aria-labelledby="problemaTitle">
+      <div class="container">
+
+        <div class="problema__header reveal">
+          <p class="section-label">O Problema</p>
+          <h2 class="section-title" id="problemaTitle">
+            A indústria têxtil<br />opera no <em>escuro</em>
+          </h2>
+          <p class="section-desc">
+            Planilhas desatualizadas, cálculos manuais imprecisos e rastreabilidade
+            fragmentada custam lotes inteiros de produção e prejudicam a tomada de decisão.
+          </p>
+        </div>
+
+        <div class="problema__grid" role="list">
+
+          <article class="pain-card reveal reveal-delay-1" role="listitem" aria-label="Problema 1: Cálculos manuais imprecisos">
+            <p class="pain-card__number">01</p>
+            <h3 class="pain-card__title">Cálculos Manuais</h3>
+            <p class="pain-card__desc">
+              Operadores usam estimativas para determinar metragem e peso de lote,
+              gerando desvios que se acumulam turno a turno sem controle.
+            </p>
+            <ul class="pain-card__bullets" aria-label="Pontos de dor">
+              <li class="pain-card__bullet">Sem fórmula padronizada por produto</li>
+              <li class="pain-card__bullet">Resultados variam entre operadores</li>
+              <li class="pain-card__bullet">Erros só descobertos após a produção</li>
+            </ul>
+          </article>
+
+          <article class="pain-card reveal reveal-delay-2" role="listitem" aria-label="Problema 2: Rastreabilidade zero">
+            <p class="pain-card__number">02</p>
+            <h3 class="pain-card__title">Rastreabilidade Zero</h3>
+            <p class="pain-card__desc">
+              Não há histórico consolidado de lotes, fichas técnicas por produto ou
+              registro de quem executou cada operação no turno.
+            </p>
+            <ul class="pain-card__bullets" aria-label="Pontos de dor">
+              <li class="pain-card__bullet">Fichas em papel, perdidas no arquivo físico</li>
+              <li class="pain-card__bullet">Impossível auditar desvios passados</li>
+              <li class="pain-card__bullet">Retrabalho por falta de referência</li>
+            </ul>
+          </article>
+
+          <article class="pain-card reveal reveal-delay-3" role="listitem" aria-label="Problema 3: Perfis de acesso fragmentados">
+            <p class="pain-card__number">03</p>
+            <h3 class="pain-card__title">Perfis Fragmentados</h3>
+            <p class="pain-card__desc">
+              Supervisores, operadores e diretores acessam os mesmos dados sem
+              hierarquia de permissão, gerando conflitos e edições indevidas.
+            </p>
+            <ul class="pain-card__bullets" aria-label="Pontos de dor">
+              <li class="pain-card__bullet">Sem controle de quem altera o quê</li>
+              <li class="pain-card__bullet">Dados sobrescritos acidentalmente</li>
+              <li class="pain-card__bullet">Relatórios inconsistentes para a gerência</li>
+            </ul>
+          </article>
+
+        </div>
+
+        <!-- Card de impacto -->
+        <div class="impact-card reveal mt-21" role="region" aria-label="Impacto financeiro: 23% de desvio no lote">
+          <div class="impact-card__metric">
+            <span class="impact-card__value" aria-label="23 porcento de desvio médio no lote">23%</span>
+            <span class="impact-card__label">Desvio médio no lote</span>
+          </div>
+          <div class="impact-card__text">
+            <h3>O custo invisível da imprecisão</h3>
+            <p>
+              Levantamentos internos na Stickfran identificaram desvios de até 23% entre
+              o lote calculado manualmente e o peso real medido na entrega. Cada ponto
+              percentual representa metros de fio e horas de mão de obra desperdiçados.
+              Precisão não é opcional — é margem bruta.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="sep" role="separator" aria-hidden="true"></div>
+
+    <!-- ============================================================
+         SEÇÃO 3 — SOLUÇÃO
+    ============================================================ -->
+    <section class="solucao" id="solucao" aria-labelledby="solucaoTitle">
+      <div class="container">
+
+        <div class="solucao__header reveal">
+          <p class="section-label">A Solução</p>
+          <h2 class="section-title" id="solucaoTitle">
+            Engenharia no<br /><em>ponto certo</em>
+          </h2>
+          <p class="section-desc">
+            Três pilares técnicos transformam a forma como sua fábrica calcula,
+            registra e rastreia cada etapa da espuladeira.
+          </p>
+        </div>
+
+        <!-- Features principais -->
+        <div class="solucao__main-grid" role="list">
+
+          <article class="feature-card reveal reveal-delay-1" role="listitem" aria-label="Feature: Motor de cálculo Arquimedes e Bhaskara">
+            <span class="feature-card__badge">Motor de Cálculo</span>
+            <div class="feature-card__icon-wrap" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Arquimedes + Bhaskara</h3>
+            <p class="feature-card__desc">
+              Cálculo geométrico de volume de fio em bobina (princípio de Arquimedes)
+              combinado com Bhaskara para resolução de equações quadráticas de metragem.
+              Resultado: lote calculado com desvio inferior a 0,5%.
+            </p>
+            <div class="feature-card__formula" aria-label="Fórmula: Volume igual a pi vezes h vezes R quadrado menos r quadrado sobre 4">
+              V = &pi; &middot; h &middot; (R&sup2; &minus; r&sup2;) / 4
+            </div>
+          </article>
+
+          <article class="feature-card reveal reveal-delay-2" role="listitem" aria-label="Feature: Fichas técnicas digitais">
+            <span class="feature-card__badge">Fichas Técnicas</span>
+            <div class="feature-card__icon-wrap" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10,9 9,9 8,9"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Fichas Técnicas Digitais</h3>
+            <p class="feature-card__desc">
+              Cada produto tem sua ficha técnica versionada: título, parâmetros de bobina,
+              coeficiente de tensão de fio e tipo de espula. Atualizações propagam
+              automaticamente para todos os cálculos futuros.
+            </p>
+            <div class="feature-card__formula" aria-label="Parâmetros da ficha técnica">
+              D_ext &middot; D_int &middot; h &middot; Ne &middot; torsão
+            </div>
+          </article>
+
+          <article class="feature-card reveal reveal-delay-3" role="listitem" aria-label="Feature: Histórico completo e rastreabilidade">
+            <span class="feature-card__badge">Rastreabilidade</span>
+            <div class="feature-card__icon-wrap" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+              </svg>
+            </div>
+            <h3 class="feature-card__title">Histórico Completo</h3>
+            <p class="feature-card__desc">
+              Cada operação é registrada com timestamp, usuário e parâmetros utilizados.
+              Filtre por data, produto ou operador. Exporte para análise em qualquer
+              ferramenta. Rastreabilidade total do fio ao lote.
+            </p>
+            <div class="feature-card__formula" aria-label="Estrutura do log de operação">
+              [ts] &middot; user &middot; produto &middot; qty &middot; &Delta;%
+            </div>
+          </article>
+
+        </div>
+
+        <!-- Benefits secundários -->
+        <div class="solucao__benefits" role="list">
+
+          <div class="benefit-item reveal reveal-delay-1" role="listitem">
+            <div class="benefit-item__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div class="benefit-item__content">
+              <h4>Perfis com Permissão</h4>
+              <p>Operador, Supervisor e Diretor com acessos distintos. Cada ação auditada por usuário e timestamp.</p>
+            </div>
+          </div>
+
+          <div class="benefit-item reveal reveal-delay-2" role="listitem">
+            <div class="benefit-item__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </div>
+            <div class="benefit-item__content">
+              <h4>100% Web, Zero Instalação</h4>
+              <p>Roda em qualquer navegador moderno. Sem servidor dedicado, sem dependência de TI local.</p>
+            </div>
+          </div>
+
+          <div class="benefit-item reveal reveal-delay-3" role="listitem">
+            <div class="benefit-item__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17,8 12,3 7,8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="benefit-item__content">
+              <h4>Exportação e Relatórios</h4>
+              <p>Gere relatórios por lote, turno ou produto. Dados estruturados prontos para integração com ERP.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <div class="sep" role="separator" aria-hidden="true"></div>
+
+    <!-- ============================================================
+         SEÇÃO 4 — BENEFÍCIOS + PODCAST
+    ============================================================ -->
+    <section class="beneficios" id="beneficios" aria-labelledby="beneficiosTitle">
+      <div class="container">
+
+        <div class="beneficios__header reveal">
+          <p class="section-label">Benefícios + Conteúdo</p>
+          <h2 class="section-title" id="beneficiosTitle">
+            Números que<br /><em>falam</em>
+          </h2>
+          <p class="section-desc">
+            Resultados mensuráveis e o conhecimento técnico por trás do sistema,
+            disponível para toda a equipe.
+          </p>
+        </div>
+
+        <div class="beneficios__layout">
+
+          <!-- KPIs + YouTube -->
+          <div>
+            <div class="kpis reveal">
+
+              <div class="kpi-row" role="list" aria-label="Métricas do sistema">
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-card__value" aria-label="32 fusos">32</div>
+                  <div class="kpi-card__label">Fusos</div>
+                </div>
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-card__value" aria-label="3 perfis">3</div>
+                  <div class="kpi-card__label">Perfis</div>
+                </div>
+                <div class="kpi-card" role="listitem">
+                  <div class="kpi-card__value" aria-label="100% web">100%</div>
+                  <div class="kpi-card__label">Web</div>
+                </div>
+              </div>
+
+              <div class="kpi-desc reveal reveal-delay-1">
+                <strong style="font-family:var(--font-ui);font-weight:600;color:var(--color-text);">Por que esses números importam?</strong>
+                <br /><br />
+                Cada espula monitorada em tempo real representa um nó de controle
+                na cadeia produtiva. Com 32 fusos mapeados, 3 níveis de acesso
+                diferenciados e operação 100% via browser — a Stickfran elimina
+                gargalos de infraestrutura e concentra a atenção onde ela deve estar:
+                na qualidade do fio.
+              </div>
+
+            </div>
+
+            <!-- YouTube CTA -->
+            <div class="reveal reveal-delay-2 mt-21">
+              <p style="font-family:var(--font-ui);font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:var(--sp-8);">
+                Acompanhe no canal
+              </p>
+              <a
+                href="#"
+                target="_blank"
+                rel="noopener"
+                class="youtube-cta"
+                aria-label="Assistir conteúdos Stickfran no YouTube (abre em nova aba)"
+              >
+                <svg class="youtube-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Ver no YouTube
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15,3 21,3 21,9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Podcast player -->
+          <div class="reveal reveal-delay-2">
+            <div
+              class="podcast-panel"
+              role="region"
+              aria-label="Player do podcast: Arquimedes e Bhaskara na fábrica Stickfran"
+            >
+
+              <p class="podcast-panel__label">Podcast Técnico &middot; Episódio</p>
+
+              <h3 class="podcast-panel__title">
+                Arquimedes e Bhaskara<br />na fábrica Stickfran
+              </h3>
+
+              <p class="podcast-panel__subtitle">
+                Como princípios matemáticos do século III a.C. e do século XII
+                se tornaram o núcleo de precisão do Gerenciador de Pulso v8.0.
+                Uma conversa técnica sobre volume, geometria e equação quadrática
+                aplicados à espuladeira.
+              </p>
+
+              <!-- Waveform visual decorativa -->
+              <div class="podcast-waveform" id="podcastWaveform" aria-hidden="true"></div>
+
+              <!-- Controles do player -->
+              <div class="podcast-controls">
+
+                <button
+                  class="podcast-btn-play"
+                  id="podcastPlayBtn"
+                  aria-label="Reproduzir podcast"
+                  aria-pressed="false"
+                >
+                  <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="5,3 19,12 5,21"/>
+                  </svg>
+                  <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="display:none;">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                  </svg>
+                </button>
+
+                <div class="podcast-progress-wrap">
+                  <div
+                    class="podcast-progress-bar"
+                    id="podcastProgressBar"
+                    role="slider"
+                    aria-label="Progresso do podcast"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    aria-valuenow="0"
+                    tabindex="0"
+                  >
+                    <div class="podcast-progress-fill" id="podcastProgressFill"></div>
+                  </div>
+                  <div class="podcast-time">
+                    <span id="podcastCurrentTime">0:00</span>
+                    <span id="podcastDuration">&mdash;:&mdash;&mdash;</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Elemento de áudio oculto -->
+              <audio
+                id="podcastAudio"
+                src="docs/Arquimedes_e_Bhaskara_na_fábrica_Stickfran.m4a"
+                preload="metadata"
+                aria-hidden="true"
+              ></audio>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="sep" role="separator" aria-hidden="true"></div>
+
+    <!-- ============================================================
+         SEÇÃO 5 — CTA FINAL
+    ============================================================ -->
+    <section class="cta-final" id="cta" aria-labelledby="ctaTitle">
+      <div class="container">
+        <div class="cta-final__panel reveal">
+
+          <p class="cta-final__eyebrow">Pronto para começar?</p>
+
+          <h2 class="cta-final__title" id="ctaTitle">
+            Coloque a <em>precisão</em><br />
+            a trabalhar
+          </h2>
+
+          <p class="cta-final__desc">
+            Acesse o sistema agora, consulte o manual técnico completo ou
+            explore o MVP para entender a arquitetura antes de implantar.
+          </p>
+
+          <div class="cta-final__actions">
+            <a href="index.html" class="btn-primary" aria-label="Acessar o sistema completo">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+              </svg>
+              Acessar Sistema
+            </a>
+            <a href="docs/manual.pdf" class="btn-ghost" target="_blank" rel="noopener" aria-label="Abrir manual técnico em PDF (abre em nova aba)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+              </svg>
+              Manual Técnico
+            </a>
+            <a href="mvp.html" class="btn-ghost" aria-label="Ver a versão MVP do sistema">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+              Ver MVP
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="footer" role="contentinfo" aria-label="Rodapé Stickfran Indústria">
+    <div class="container">
+
+      <div class="footer__grid">
+
+        <!-- Brand -->
+        <div>
+          <div class="footer__brand-name" aria-label="Stickfran">
+            STICK<span>FRAN</span>
+          </div>
+          <p class="footer__brand-desc">
+            Stickfran Indústria — Soluções de controle de produção para
+            a indústria têxtil. Precisão, rastreabilidade e eficiência
+            operacional no chão de fábrica.
+          </p>
+          <span class="footer__badge" aria-label="Versão 8.0 Espuladeira">
+            v8.0 &middot; Espuladeira
+          </span>
+        </div>
+
+        <!-- Sistema -->
+        <nav aria-label="Links do sistema">
+          <p class="footer__col-title">Sistema</p>
+          <ul class="footer__links" role="list">
+            <li><a href="index.html" class="footer__link">Acessar Sistema</a></li>
+            <li><a href="mvp.html" class="footer__link">MVP</a></li>
+            <li><a href="docs/manual.pdf" class="footer__link" target="_blank" rel="noopener">Manual Técnico</a></li>
+          </ul>
+        </nav>
+
+        <!-- Recursos -->
+        <nav aria-label="Recursos e conteúdo">
+          <p class="footer__col-title">Recursos</p>
+          <ul class="footer__links" role="list">
+            <li><a href="#beneficios" class="footer__link">Podcast Técnico</a></li>
+            <li><a href="#" class="footer__link" target="_blank" rel="noopener">YouTube</a></li>
+            <li><a href="#beneficios" class="footer__link">KPIs do Sistema</a></li>
+          </ul>
+        </nav>
+
+      </div>
+
+      <div class="footer__bottom">
+        <p class="footer__copy">
+          &copy; 2024&ndash;2026 <span>Stickfran Indústria</span>. Todos os direitos reservados.
+        </p>
+        <span class="footer__version" aria-label="Gerenciador de Pulso versão 8.0">
+          Gerenciador de Pulso v8.0
+        </span>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JAVASCRIPT — JS puro, sem dependências
+  ============================================================ -->
+  <script>
+  (function () {
+    'use strict';
+
+    /* ----------------------------------------------------------
+       NAV: estado de scroll + hamburguer
+    ---------------------------------------------------------- */
+    var nav        = document.getElementById('mainNav');
+    var hamburger  = document.getElementById('hamburgerBtn');
+    var mobileNav  = document.getElementById('mobileNav');
+    var mobileOpen = false;
+
+    window.addEventListener('scroll', function () {
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+
+    hamburger.addEventListener('click', function () {
+      mobileOpen = !mobileOpen;
+      hamburger.setAttribute('aria-expanded', String(mobileOpen));
+      hamburger.setAttribute('aria-label', mobileOpen ? 'Fechar menu' : 'Abrir menu');
+      mobileNav.classList.toggle('open', mobileOpen);
+    });
+
+    mobileNav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        mobileOpen = false;
+        hamburger.setAttribute('aria-expanded', 'false');
+        hamburger.setAttribute('aria-label', 'Abrir menu');
+        mobileNav.classList.remove('open');
+      });
+    });
+
+    /* ----------------------------------------------------------
+       REVEAL ON SCROLL — IntersectionObserver
+    ---------------------------------------------------------- */
+    var revealEls = document.querySelectorAll('.reveal');
+
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      revealEls.forEach(function (el) { obs.observe(el); });
+    } else {
+      revealEls.forEach(function (el) { el.classList.add('visible'); });
+    }
+
+    /* ----------------------------------------------------------
+       HERO PARALLAX SUTIL
+    ---------------------------------------------------------- */
+    var heroGrid = document.querySelector('.hero__grid');
+    if (heroGrid) {
+      var vh = window.innerHeight;
+      window.addEventListener('scroll', function () {
+        if (window.scrollY < vh) {
+          heroGrid.style.transform = 'translateY(' + (window.scrollY * 0.15) + 'px)';
+        }
+      }, { passive: true });
+    }
+
+    /* ----------------------------------------------------------
+       PODCAST: gerar waveform decorativa
+    ---------------------------------------------------------- */
+    var waveformEl = document.getElementById('podcastWaveform');
+    if (waveformEl) {
+      var heights = [20,30,40,55,45,35,50,60,38,28,42,58,35,25,45,55,30,48,62,40,22,38,52,45,35,28,50,44,38,60,42,30,55,48,34,26,40,56,38,30,46,52,36,28,44,58,40,32];
+      var barCount = 48;
+      for (var i = 0; i < barCount; i++) {
+        var bar = document.createElement('div');
+        bar.className = 'podcast-waveform__bar';
+        bar.style.height = heights[i % heights.length] + '%';
+        waveformEl.appendChild(bar);
+      }
+    }
+
+    /* ----------------------------------------------------------
+       PODCAST PLAYER
+    ---------------------------------------------------------- */
+    var audio       = document.getElementById('podcastAudio');
+    var playBtn     = document.getElementById('podcastPlayBtn');
+    var iconPlay    = document.getElementById('iconPlay');
+    var iconPause   = document.getElementById('iconPause');
+    var progressBar = document.getElementById('podcastProgressBar');
+    var fill        = document.getElementById('podcastProgressFill');
+    var currentTEl  = document.getElementById('podcastCurrentTime');
+    var durationEl  = document.getElementById('podcastDuration');
+    var wfBars      = waveformEl ? waveformEl.querySelectorAll('.podcast-waveform__bar') : [];
+    var isPlaying   = false;
+    var seeking     = false;
+
+    function fmtTime(s) {
+      if (!s || isNaN(s) || !isFinite(s)) return '\u2014:\u2014\u2014';
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    function updateProgress() {
+      if (!audio.duration || isNaN(audio.duration)) return;
+      var pct = (audio.currentTime / audio.duration) * 100;
+      fill.style.width = pct + '%';
+      progressBar.setAttribute('aria-valuenow', Math.round(pct));
+      currentTEl.textContent = fmtTime(audio.currentTime);
+
+      var activeCount = Math.floor((pct / 100) * wfBars.length);
+      wfBars.forEach(function (b, idx) {
+        b.classList.toggle('active', idx < activeCount);
+      });
+    }
+
+    function setPlayingState(playing) {
+      isPlaying = playing;
+      iconPlay.style.display  = playing ? 'none'  : '';
+      iconPause.style.display = playing ? ''      : 'none';
+      playBtn.setAttribute('aria-label',   playing ? 'Pausar podcast'    : 'Reproduzir podcast');
+      playBtn.setAttribute('aria-pressed', playing ? 'true'              : 'false');
+    }
+
+    audio.addEventListener('loadedmetadata', function () {
+      durationEl.textContent = fmtTime(audio.duration);
+    });
+
+    playBtn.addEventListener('click', function () {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play().catch(function (err) {
+          console.warn('[Podcast] Erro ao reproduzir:', err.message);
+        });
+      }
+    });
+
+    audio.addEventListener('play',  function () { setPlayingState(true);  });
+    audio.addEventListener('pause', function () { setPlayingState(false); });
+    audio.addEventListener('ended', function () {
+      setPlayingState(false);
+      fill.style.width = '0%';
+      currentTEl.textContent = '0:00';
+      wfBars.forEach(function (b) { b.classList.remove('active'); });
+    });
+    audio.addEventListener('timeupdate', updateProgress);
+
+    /* Seek */
+    function seekByEvent(e) {
+      if (!audio.duration || isNaN(audio.duration)) return;
+      var rect    = progressBar.getBoundingClientRect();
+      var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      var pct     = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      audio.currentTime = pct * audio.duration;
+      updateProgress();
+    }
+
+    progressBar.addEventListener('mousedown', function (e) { seeking = true; seekByEvent(e); });
+    document.addEventListener('mousemove',    function (e) { if (seeking) seekByEvent(e); });
+    document.addEventListener('mouseup',      function ()  { seeking = false; });
+
+    progressBar.addEventListener('touchstart', function (e) { seekByEvent(e); }, { passive: true });
+    progressBar.addEventListener('touchmove',  function (e) { seekByEvent(e); }, { passive: true });
+
+    progressBar.addEventListener('keydown', function (e) {
+      if (!audio.duration) return;
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); playBtn.click(); }
+      if (e.key === 'ArrowRight') { audio.currentTime = Math.min(audio.duration, audio.currentTime + 5); updateProgress(); }
+      if (e.key === 'ArrowLeft')  { audio.currentTime = Math.max(0, audio.currentTime - 5); updateProgress(); }
+    });
+
+  }());
+  </script>
+
+</body>
+</html>
